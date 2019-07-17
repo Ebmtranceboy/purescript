@@ -20,6 +20,7 @@ import Control.Monad.Reader.Trans(ReaderT, runReaderT)
 import Control.Monad.Writer.Trans(WriterT, runWriterT)
 import Control.Monad.Except.Trans(ExceptT, runExceptT, throwError)
 import Control.Monad.Trans.Class(lift)
+import Control.Monad.Reader.Class(class MonadReader)
 
 {- Transformation 0 -}
 
@@ -66,8 +67,8 @@ line str = do
   level <- ask
   pure $ blankPrefix (2*level) str
 
-indentDoc :: Doc -> Doc
-indentDoc = local (_ + 1) 
+indent :: forall a m. MonadReader Int m => m a -> m a
+indent = local (_ + 1) 
 
 cat :: Array Doc -> Doc
 cat arr = (foldr withNewLine "") <$> (sequence arr)
@@ -81,9 +82,6 @@ type Builder = ReaderT Level (WriterT (Array String) Identity) Unit
 
 runBuilder :: Level -> Builder -> Tuple Unit (Array String)
 runBuilder l b = unwrap $ runWriterT $ runReaderT b l 
-
-indentBuilder :: Builder -> Builder
-indentBuilder = local (_ + 1) 
 
 build :: String -> Builder
 build str = do
@@ -103,19 +101,19 @@ main = do
   log "\nTest 2:"
   log $ render $ cat
     [ line "Here is some indented text:"
-    , indentDoc $ cat
+    , indent $ cat
       [ line "I am indented"
       , line "So am I"
-      , indentDoc $ line "I am even more indented"
+      , indent $ line "I am even more indented"
       ]
     ]
 
   log "\nTest 3:"
   log $ (\(Tuple un arr) -> foldr (<>) "" arr) $ runBuilder 2 $ do
     build "Here is some indented text:"
-    indentBuilder $ do
+    indent $ do
       build "I am indented"
       build "So am I"
-      indentBuilder $ build "I am even more indented"
+      indent $ build "I am even more indented"
 
 
