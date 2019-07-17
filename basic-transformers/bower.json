@@ -1,0 +1,20 @@
+{
+  "name": "basic-transformers",
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "bower_components",
+    "output"
+  ],
+  "dependencies": {
+    "purescript-prelude": "^4.1.1",
+    "purescript-console": "^4.2.0",
+    "purescript-effect": "^2.0.1",
+    "purescript-foreign": "^5.0.0",
+    "purescript-foreign-generic": "^10.0.0",
+    "purescript-validation": "^4.2.0"
+  },
+  "devDependencies": {
+    "purescript-psci-support": "^4.0.0"
+  }
+}

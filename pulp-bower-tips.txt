@@ -1,0 +1,20 @@
+pulp init
+pulp build
+pulp run
+pulp browserify
+pulp build -O --main Example.Rectangle --to browserified.js
+
+pulp psci -- --port 8080
+
+pulp docs -- --format html
+-- | Text `outlined expression` Text _emphased text_
+-- |
+-- | - bullet1
+-- | - bullet2
+-- |
+-- | ```purescript
+-- | instance functorF :: Functor F where
+-- |   map = liftA1
+-- | ```
+
+bower update

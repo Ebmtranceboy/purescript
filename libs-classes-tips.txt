@@ -1,0 +1,177 @@
+Data.Functor              bower install purescript-prelude --save
+Control.Applicative
+Control.Apply
+Control.Monad
+Data.Eq
+Data.Ordering
+(...)
+
+Control.Monad.Aff         bower install purescript-aff --save
+Affjax                    bower install purescript-affjax --save
+Data.Argonaut             bower install purescript-argonaut --save
+Data.Array                bower install purescript-arrays --save
+FRP.Behavior              bower install purescript-behaviors --save
+Graphics.Canvas           bower install purescript-canvas --save
+Control.MonadZero         bower install purescript-control --save
+Control.Plus              bower install purescript-control --save
+Debug.Trace               bower install purescript-debug --save
+Graphics.Drawing          bower install purescript-drawing --save
+Data.Either               bower install purescript-either --save
+Data.Enum                 bower install purescript-enums --save
+Data.Traversable          bower install purescript-foldable-traversable --save
+Data.Foldable             bower install purescript-foldable-traversable --save
+Data.Foreign              bower install purescript-foreign --save
+Data.Function.Uncurried   bower install purescript-functions --save
+Data.Int                  bower install purescript-integers --save
+Data.List                 bower install purescript-lists --save
+Math                      bower install purescript-math --save
+Data.Maybe                bower install purescript-maybe --save
+Data.Monoid               bower install purescript-monoid --save
+Data.Newtype              bower install purescript-newtype --save
+Partial.Unsafe            bower install purescript-partial --save
+Effect.Random             bower install purescript-random --save
+Run                       bower install purescript-run --save
+Data.Set                  bower install purescript-sets --save
+Control.Monad.ST          bower install purescript-st --save
+Data.String               bower install purescript-strings --save
+Data.Char                 bower install purescript-strings --save
+Thermite                  bower install purescript-thermite --save
+Control.Monad.State       bower install purescript-transformers --save
+Data.Tuple                bower install purescript-tuples --save
+Turbine                   bower install purescript-turbine --save
+Data.Validation.Semigroup bower install purescript-validation --save
+Web.HTML                  bower install purescript-web-html --save
+
+import Control.Monad.ST(newSTRef)
+import Control.MonadZero(guard)
+import Data.Array(foldM)
+import Data.Array.Partial(head)
+import Data.Char(toCharCode)
+import Data.Enum(fromEnum)
+import Data.Foldable(sum, product, foldM)
+import Data.Function.Uncurried(Fn's, mkFn's, runFn's)
+import Data.Int(floor, fromStringAs, toStringAs, binary, octal, hexadecimal, decimal, base36, radix)
+import Data.List(fromFoldable, filterM, toUnfoldable)
+import Data.Maybe(fromJust)
+import Data.String(toCharArray)
+import Partial.Unsafe (unsafePartial)
+
+class Eq a where
+  eq :: a -> a -> Boolean
+  
+data Ordering = LT | EQ | GT
+
+class Eq a <= Ord a where
+  compare :: a -> a -> Ordering
+
+class Semigroupoid a where
+  compose :: forall b c d. a c d -> a b c -> a b d
+
+class Semigroupoid a <= Category a where
+  id :: forall t. a t t
+
+class Semigroup a where
+  append :: a -> a -> a
+  
+class (Semigroup m) <= Monoid m where
+  mempty :: m
+
+class Foldable f where
+  foldr :: forall a b. (a -> b -> b) -> b -> f a -> b
+  foldl :: forall a b. (b -> a -> b) -> b -> f a -> b
+  foldMap :: forall a m. Monoid m => (a -> m) -> f a -> m
+
+class Functor f where
+  map :: forall a b. (a -> b) -> f a -> f b
+
+infixl 4 map as <$>
+
+class Functor f <= Apply f where
+  apply :: forall a b. f (a -> b) -> f a -> f b 
+
+infixl 4 apply as <*>
+
+class Apply f <= Applicative f where
+  pure :: forall a. a -> f a
+
+class (Functor t, Foldable t) <= Traversable t where
+  traverse :: forall a b f. Applicative f => (a -> f b) -> t a -> f (t b)
+  sequence :: forall a f. Applicative f => t (f a) -> f (t a)
+
+-- sequence = traverse identity
+-- traverse f = sequence <<< (map f)
+-- traverse_ :: forall a b t f. Applicative f => Foldable t => (a -> f b) -> t a -> f Unit
+
+class Apply m <= Bind m where
+  bind :: forall a b. m a -> (a -> m b) -> m b
+
+class (Applicative m, Bind m) <= Monad m
+
+data Tuple a b = Tuple a b
+
+class Monad m <= MonadState s m | m -> s where
+  state :: forall a. (s -> (Tuple a s)) -> m a
+
+class Semiring a where
+  add :: a -> a -> a
+  zero :: a
+  mul :: a -> a -> a
+  one :: a
+
+data Number :: Type
+
+instance semiringNumber :: Semiring Number where
+  add = (+)
+  zero = 0
+  mul = (*)
+  one = 1
+
+-- Haskell's Num:
+class (Semiring a) <= Ring a where
+  sub :: a -> a -> a
+
+class (Ring a) <= CommutativeRing a
+
+class (Ring a) <= DivisionRing a where
+  recip :: a -> a -> a
+
+-- Haskell's Integral:
+class (CommutativeRing a) <= EuclideanRing a where
+  degree :: a -> Int
+  div :: a -> a -> a
+  mod :: a -> a -> a
+
+--Haskell's Fractional:
+class (EuclideanRing a, DivisionRing a) <= Field a
+
+> import Data.Array(head) as Array
+> Array.head xs
+(Just 1)
+
+> import Data.Array.Partial(head) as Partial
+> unsafePartial Partial.head xs
+1
+
+nonEmpty :: String -> Either String Unit
+nonEmpty "" = Left "Field cannot be empty"
+nonEmpty _  = Right unit
+
+validatePerson :: Person -> Either String Person
+validatePerson (Person o) =
+  person <$> (nonEmpty o.firstName *> pure o.firstName)
+         <*> (nonEmpty o.lastName  *> pure o.lastName)
+
+sort $ nub $ map sum $ foldM (\xs x -> [x:xs,xs]) [] ([1,2,5,10])
+ 
+> import Data.List(filterM,fromFoldable,toUnfoldable)
+> subsets = filterM (const [true, false])
+> (map toUnfoldable $ subsets $ fromFoldable [4,2,6,3]) :: Array (Array Int)
+
+import Data.Foldable (traverse_)
+import Control.Monad.State
+import Control.Monad.State.Class
+sumArray = traverse_ \n -> modify \sum -> sum + n
+runState (do
+  sumArray [1, 2, 3]
+  sumArray [4, 5]
+  sumArray [6]) 0

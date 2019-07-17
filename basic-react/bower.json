@@ -1,0 +1,24 @@
+{
+  "name": "basic-react",
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "bower_components",
+    "output"
+  ],
+  "dependencies": {
+    "purescript-prelude": "^4.1.1",
+    "purescript-console": "^4.2.0",
+    "purescript-effect": "^2.0.1",
+    "purescript-pux": "^13.0.0",
+    "purescript-foreign-object": "^2.0.3",
+    "purescript-smolder": "^12.0.0"
+  },
+  "devDependencies": {
+    "purescript-psci-support": "^4.0.0"
+  },
+  "resolutions": {
+    "purescript-typelevel-prelude": ">= 4.0.0 < 6.0.0",
+    "purescript-smolder": "^12.0.0"
+  }
+}
