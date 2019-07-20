@@ -93,10 +93,10 @@ main = do
   mcanvas <- getCanvasElementById "canvas"
   let canvas = unsafePartial (fromJust mcanvas)
   ctx <- getContext2D canvas
+  _ <- setCanvasWidth canvas 300.0
+  _ <- setCanvasHeight canvas 300.0
   w <- getCanvasWidth canvas
   h <- getCanvasHeight canvas
-  _ <- setCanvasWidth canvas w
-  _ <- setCanvasHeight canvas h
   mouse <- getMouse
   _ <- animate (scene mouse { w, h }) (render ctx)
   pure unit

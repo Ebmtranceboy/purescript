@@ -9,7 +9,7 @@ import Data.Identity(Identity)
 import Control.Monad.Except.Trans(ExceptT, runExceptT, throwError)
 import Control.Monad.State(get, put)
 import Control.Monad.Writer(tell)
-import Control.Monad.Trans.Class(lift)
+--import Control.Monad.Trans.Class(lift)
 import Data.Newtype(unwrap)
 import Data.Either(Either)
 import Data.Tuple(Tuple)
@@ -28,9 +28,10 @@ runParser p s = unwrap $ runExceptT $ runWriterT $ runStateT p s
 split :: Parser String
 split = do
   s <- get
-  lift $ tell ["The state is " <> show s]
+  {-lift $-}
+  tell ["The state is " <> show s]
   case s of
-    "" -> lift $ lift $ throwError ["Empty string"]
+    "" -> {-lift $ lift $-} throwError ["Empty string"]
     _ -> do
       put (drop 1 s)
       pure (take 1 s)
@@ -39,9 +40,10 @@ split = do
 string :: String -> Parser String
 string str = do
   s <- get
-  lift $ tell ["The state is " <> s]
+  {-lift $ -}
+  tell ["The state is " <> s]
   case stripPrefix (Pattern str) s of
-    Nothing -> lift $ lift $ throwError ["Unmatching pattern"]
+    Nothing -> {-lift $ lift $-} throwError ["Unmatching pattern"]
     _ -> do
       let n = length str
       put (drop n s)

@@ -1,5 +1,5 @@
 {
-  "name": "parser",
+  "name": "tetris",
   "ignore": [
     "**/.*",
     "node_modules",
@@ -10,9 +10,10 @@
     "purescript-prelude": "^4.1.1",
     "purescript-console": "^4.2.0",
     "purescript-effect": "^2.0.1",
-    "purescript-strings": "^4.0.1",
-    "purescript-control": "^4.1.0",
-    "purescript-transformers": "^4.2.0"
+    "purescript-now": "^4.0.0",
+    "purescript-drawing": "^4.0.0",
+    "purescript-behaviors": "^7.0.0",
+    "purescript-random": "^4.0.0"
   },
   "devDependencies": {
     "purescript-psci-support": "^4.0.0"
