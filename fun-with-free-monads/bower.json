@@ -1,5 +1,5 @@
 {
-  "name": "tetris",
+  "name": "fun-with-free-monads",
   "ignore": [
     "**/.*",
     "node_modules",
@@ -10,9 +10,9 @@
     "purescript-prelude": "^4.1.1",
     "purescript-console": "^4.2.0",
     "purescript-effect": "^2.0.1",
+    "purescript-maybe": "^4.0.1",
     "purescript-drawing": "^4.0.0",
-    "purescript-behaviors": "^7.0.0",
-    "purescript-random": "^4.0.0"
+    "purescript-behaviors": "^7.0.0"
   },
   "devDependencies": {
     "purescript-psci-support": "^4.0.0"
