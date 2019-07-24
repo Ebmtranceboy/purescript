@@ -6,4 +6,5 @@
 /.psc-package/
 /.psc*
 /.purs*
-/.psa*
+/ .psa*
+.DS_Store
