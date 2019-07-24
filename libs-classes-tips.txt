@@ -30,6 +30,7 @@ Data.Monoid               bower install purescript-monoid --save
 Data.Newtype              bower install purescript-newtype --save
 Partial.Unsafe            bower install purescript-partial --save
 Effect.Random             bower install purescript-random --save
+Data.Ratio                bower install purescript-rationals --save
 Run                       bower install purescript-run --save
 Data.Set                  bower install purescript-sets --save
 Control.Monad.ST          bower install purescript-st --save
