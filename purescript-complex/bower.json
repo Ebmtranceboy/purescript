@@ -8,6 +8,11 @@
     "output",
     ".DS_Store"
   ],
+      "repository": {
+      "type": "git",
+      "url": "https://github.com/Ebmtranceboy/purescript.git"
+    },
+
   "dependencies": {
     "purescript-prelude": "^4.1.1",
     "purescript-console": "^4.2.0",
