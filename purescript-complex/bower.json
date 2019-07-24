@@ -1,6 +1,6 @@
 {
   "name": "purescript-complex",
-  "licence": "MIT",
+  "license": "MIT",
   "ignore": [
     "**/.*",
     "node_modules",
