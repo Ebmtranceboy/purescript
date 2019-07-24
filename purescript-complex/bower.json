@@ -5,7 +5,8 @@
     "**/.*",
     "node_modules",
     "bower_components",
-    "output"
+    "output",
+    ".DS_Store"
   ],
   "dependencies": {
     "purescript-prelude": "^4.1.1",
