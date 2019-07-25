@@ -1,5 +1,5 @@
 {
-  "name": "json",
+  "name": "repl",
   "ignore": [
     "**/.*",
     "node_modules",
@@ -10,12 +10,8 @@
     "purescript-prelude": "^4.1.1",
     "purescript-console": "^4.2.0",
     "purescript-effect": "^2.0.1",
-    "purescript-foreign": "^5.0.0",
-    "purescript-foreign-generic": "^10.0.0",
-    "purescript-maybe": "^4.0.1",
-    "purescript-web-html": "^2.2.1",
-    "purescript-aff": "^5.1.1",
-    "purescript-dom-filereader": "^5.0.0"
+    "purescript-complex": "https://github.com/Ebmtranceboy/purescript-complex",
+    "purescript-cartesian": "^1.0.1"
   },
   "devDependencies": {
     "purescript-psci-support": "^4.0.0"

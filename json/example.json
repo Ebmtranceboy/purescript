@@ -1,0 +1,12 @@
+{
+        "record": [
+                {"key1" : 11,
+                 "key2" : "bars"},
+
+                {"key1": 13,
+                 "key2": "flux"},
+                {"key1": 23,
+                 "key2": "prime"}],
+        "status": true
+}
+
