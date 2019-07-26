@@ -65,10 +65,10 @@ main = do
            decode <- DOM.createElement "div" setup.document
            json <- DOM.value textArea
 --           _ <- DOM.setTextContent (show $ runExcept (Foreign.decodeJSON json :: Foreign.F {record :: Array {key1 :: Int, key2 :: String}, status :: Boolean})) decode
-           let f :: Either String Json -> String
+           let f :: Either String Json
                f (Left s) = s
-               f (Right j) = f $ decodeJson j
-           _ <- DOM.setTextContent (f $ jsonParser json) decode
+               f (Right j) = decodeJson j
+           _ <- DOM.setTextContent (show $ f json) decode
            _ <- DOM.appendChild decode editor
            
            pure unit
