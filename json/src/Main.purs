@@ -51,26 +51,23 @@ main = do
   _ <- DOM.setAttribute "rows" "25" textArea
   _ <- DOM.appendChild textArea editor
  
+  decode <- DOM.createElement "div" setup.document
+  _ <- DOM.appendChild decode editor
+  
   inputFile <- DOM.createElement "input" setup.document
   _ <- DOM.setAttribute "type" "file" inputFile
   _ <- DOM.addEventListener (\ev -> do
-           DOM.withTextReader (\str -> DOM.setTextContent str textArea) ev
+           DOM.withTextReader (\json -> do
+             _ <- DOM.setTextContent json textArea
+             _ <- DOM.setTextContent (show $ runExcept (Foreign.decodeJSON  json :: Foreign.F {record :: Array {key1 :: Int, key2 :: String}, status :: Boolean})) decode
+             pure unit
+             ) ev
            
            button <- DOM.createElement "button" setup.document
            _ <- DOM.setTextContent "Save" button
            fileName <- DOM.fileName inputFile
            _ <- DOM.addEventListener (save textArea (suffix <> fileName) setup) DOM.click button
            _ <- DOM.appendChild button editor
-           
-           decode <- DOM.createElement "div" setup.document
-           json <- DOM.value textArea
---           _ <- DOM.setTextContent (show $ runExcept (Foreign.decodeJSON json :: Foreign.F {record :: Array {key1 :: Int, key2 :: String}, status :: Boolean})) decode
-           let f :: Either String Json -> String
-               f (Left s) = s
-               f (Right j) = f $ decodeJson j
-           _ <- DOM.setTextContent (f $ jsonParser json) decode
-           _ <- DOM.appendChild decode editor
-           
            pure unit
  
        ) DOM.change inputFile
