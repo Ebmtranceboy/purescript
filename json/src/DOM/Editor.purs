@@ -8,7 +8,7 @@ import Web.DOM.Node ( Node, appendChild, parentNode, removeChild
                     , setTextContent, fromEventTarget, textContent) as DOM
 import Web.DOM.NonElementParentNode (getElementById) as DOM
 import Web.Event.Event (Event,EventType,target) as Event
-import Web.Event.EventTarget (addEventListener, eventListener) as Event
+import Web.Event.EventTarget (addEventListener, eventListener,EventListener, removeEventListener) as Event
 import Web.Event.Internal.Types(EventTarget) as Event
 import Web.HTML.Event.EventTypes (click,change) as Event
 import Web.HTML (Window, window) as HTML
@@ -33,6 +33,7 @@ import Effect.Now(nowDateTime)
 import Data.DateTime(date, day, hour, millisecond, minute, month, second, time, year)
 import Data.Foldable(foldr)
 import Data.Enum(fromEnum)
+import Global.Unsafe(unsafeEncodeURIComponent)
 
 type Document = DOM.Document
 type Node = DOM.Node
@@ -41,7 +42,8 @@ type Window = HTML.Window
 
 setup :: Effect { window :: HTML.Window
                 , document :: DOM.Document
-                , body :: DOM.Node}
+                , body :: DOM.Node
+                , saveText :: DOM.Node -> String -> Event.Event -> Effect Unit}
 setup = do
   window        <- HTML.window
   htmlDocument  <- HTML.document window
@@ -49,7 +51,17 @@ setup = do
   maybeBody     <- HTML.body htmlDocument
   let bodyRaw = unsafePartial $ fromJust maybeBody
   let body = HTML.toNode bodyRaw
-  pure {window, document, body}
+  pom <- createElement "a" document
+  _ <- appendChild pom body
+  _ <- setAttribute "style" "display=\"none\"" pom
+  let saveText textNode nameOfFile _ = do
+        text <- value textNode
+        _ <- setAttribute "href" ("data:text/plain;charset=utf-8," <> unsafeEncodeURIComponent text) pom
+        _ <- setAttribute "download" nameOfFile pom
+        _ <- doClick pom
+        pure unit
+
+  pure {window, document, body, saveText}
 
 createElement :: String -> DOM.Document -> Effect DOM.Node
 createElement str doc = DOM.toNode <$> DOM.createElement str doc
@@ -88,18 +100,26 @@ getElementById str doc =
   (\x -> DOM.toNode $ unsafePartial $ fromJust x) 
     <$> DOM.getElementById str (DOM.toNonElementParentNode doc)
 
-addEventListener :: (Event.Event -> Effect Unit) 
+eventListener :: (Event.Event -> Effect Unit) -> Effect Event.EventListener
+eventListener cb = Event.eventListener cb
+
+addEventListener :: Event.EventListener 
                  -> Event.EventType 
-                 -> DOM.Node                  -> Effect Unit
-addEventListener cb ev node = do
-  listener <- Event.eventListener cb
-  _ <- Event.addEventListener 
+                 -> DOM.Node                  -> Effect Unit 
+addEventListener listener ev node = Event.addEventListener 
            ev 
            listener 
            false 
            (DOM.toEventTarget (unsafePartial $ fromJust 
                                              $ DOM.fromNode node))
-  pure unit
+
+removeEventListener :: Event.EventListener -> Event.EventType -> DOM.Node -> Effect Unit
+removeEventListener listener ev node = 
+  Event.removeEventListener ev 
+                            listener 
+                            false
+                            (DOM.toEventTarget (unsafePartial $ fromJust 
+                                                              $ DOM.fromNode node))
 
 doClick :: DOM.Node -> Effect Unit
 doClick node = HTML.click (unsafePartial $ fromJust $ HTML.fromNode node)

@@ -18,9 +18,7 @@
     "purescript-dom-filereader": "^5.0.0",
     "purescript-now": "^4.0.0",
     "purescript-datetime": "^4.1.1",
-    "purescript-newtype": "^3.0.0",
-    "purescript-globals": "^4.0.0",
-    "purescript-argonaut": "^6.0.0"
+    "purescript-globals": "^4.0.0"
   },
   "devDependencies": {
     "purescript-psci-support": "^4.0.0"
