@@ -17,8 +17,9 @@ import Graphics.Canvas (getCanvasElementById, getContext2D
                        , setCanvasHeight, setCanvasWidth)
 import Graphics.Drawing (Drawing, render
                         , rectangle
-                        , fillColor, filled)
-import Color (rgb)
+                        , fillColor, filled, closed, text)
+import Graphics.Drawing.Font(font, monospace, bold)
+import Color (rgb, lighten)
 
 aVeryBigPowerOf2 = 33554432 :: Int -- 2^25
 
@@ -77,6 +78,9 @@ type Game = {piece:: Piece, board:: Board}
 side :: Number
 side = 20.0
 
+biseau :: Number
+biseau = 5.0
+
 gameRows :: Int
 gameRows = 20
 gameColumns :: Int
@@ -101,17 +105,44 @@ pieceToSquares (Piece p) =
 
 type State = {currentSeed :: Int
              , nextPiece :: Piece
-             , currentGame :: Game}
+             , currentGame :: Game
+             , score :: Int}
 
 renderState :: State -> Drawing
-renderState {currentSeed:_, nextPiece, currentGame: {piece: p, board}} = 
+renderState {currentSeed:_, score, nextPiece, currentGame: {piece: p, board}} = 
   let squareToBox :: Int -> Int -> {pos:: Pos, col:: Colour} -> Drawing
       squareToBox offx offy {pos: {x,y}, col: c} = 
-          filled (fillColor $ rgb c.r c.g c.b) 
-                 (rectangle ((toNumber $ x+offx)*side) 
-                            ((toNumber $ offy-y)*side) 
-                            side 
-                            side)
+        let color = rgb c.r c.g c.b
+            var1 = lighten 0.2 color
+            var2 = lighten (-0.1) color
+            var3 = lighten (-0.2) color
+            var4 = lighten (-0.3) color
+            origx = (toNumber $ x+offx)*side
+            origy = (toNumber $ offy-y)*side
+             
+        in filled (fillColor color) 
+                 (rectangle (origx+biseau) (origy+biseau) 
+                            (side-2.0*biseau) (side-2.0*biseau))
+          <> filled (fillColor var1) 
+                    (closed [ {x:origx,y:origy}
+                            , {x:origx+side,y:origy}
+                            , {x:origx+side-biseau, y:origy+biseau}
+                            , {x:origx+biseau,y:origy+biseau}])
+           <> filled (fillColor var2) 
+                    (closed [ {x:origx+side,y:origy}
+                            , {x:origx+side-biseau, y:origy+biseau}
+                            , {x:origx+side-biseau,y:origy+side-biseau}
+                            , {x:origx+side,y:origy+side}])
+           <> filled (fillColor var3) 
+                    (closed [ {x:origx,y:origy}
+                            , {x:origx+biseau,y:origy+biseau}
+                            , {x:origx+biseau, y:origy+side-biseau}
+                            , {x:origx,y:origy+side}])
+           <> filled (fillColor var4) 
+                    (closed [ {x:origx+side-biseau,y:origy+side-biseau}
+                            , {x:origx+side,y:origy+side} 
+                            , {x:origx,y:origy+side}
+                            , {x:origx+biseau, y:origy+side-biseau}])
 
   -- blank
   in foldr (<>) mempty $ (squareToBox 5 23 <$> whiteSquares)
@@ -121,17 +152,10 @@ renderState {currentSeed:_, nextPiece, currentGame: {piece: p, board}} =
   <> (squareToBox 5 23 <$> (pieceToSquares p))
   -- preview
   <> (squareToBox (-2) 29 <$> (pieceToSquares nextPiece))
-
-renderPreview :: Piece -> Drawing
-renderPreview p = 
-  let squareToBox :: {pos:: Pos, col:: Colour} -> Drawing
-      squareToBox {pos: {x,y}, col: c } = 
-          filled (fillColor $ rgb c.r c.g c.b) 
-                 (rectangle ((toNumber $ x-2)*side) 
-                            ((toNumber $ 19-y+10)*side) 
-                            side 
-                            side)
-  in foldr (<>) mempty $ (squareToBox <$> pieceToSquares p)
+  <> [text (font monospace 50 bold) 
+           40.0 50.0 
+           (fillColor $ rgb 70 70 70) 
+           (show score)]
 
 floorCollision :: Piece -> Boolean
 floorCollision p = 
@@ -207,8 +231,10 @@ fullRow b j = all (\i -> lookup {x:i,y:j} b) $ 0..horizbounds
 fullRows :: Board -> Array Int
 fullRows b = filter (fullRow b) $ 0..vertbounds
 
-boardHandler :: Board -> Board
-boardHandler b = dropRows $ foldl clearRow b $ fullRows b
+boardHandler :: Board -> {gain :: Int, board :: Board}
+boardHandler b = 
+  let full = fullRows b
+  in {gain: length full, board: dropRows $ foldl clearRow b full}
 
 addToBoard :: Piece -> Board -> Board
 addToBoard p b = pieceToSquares p <> b
@@ -270,7 +296,8 @@ initialState seed =
    let {val, gen} = random {val: dummy, gen: dummy} {val: dummy, gen: seed}
    in { currentSeed: gen
       , nextPiece: val
-      , currentGame: {piece: dummy, board: emptyBoard}}
+      , currentGame: {piece: dummy, board: emptyBoard}
+      , score: 0}
 
 scene :: Int -> { w :: Number, h :: Number } -> Behavior Drawing
 scene seed { w, h } = pure background 
@@ -288,12 +315,14 @@ scene seed { w, h } = pure background
           p' = moveDown g.piece
       in if floorCollision p' || boardCollision p' g.board 
          then 
-          { currentSeed: gen
-           , nextPiece: val
-           , currentGame: { piece: st.nextPiece 
-                          , board: boardHandler $ addToBoard g.piece g.board}}
+           let {gain, board} = boardHandler $ addToBoard g.piece g.board
+           in { currentSeed: gen
+              , nextPiece: val
+              , currentGame: { piece: st.nextPiece 
+                             , board}
+              , score: st.score + gain}
           else st{currentGame{piece = p'}}
-    else st {currentGame = refreshGame code st.currentGame}  
+    else st{currentGame = refreshGame code st.currentGame}  
     ) (down `alt`(const "trigger" <$> interval 1000)) $ initialState seed
 
 main :: Effect Unit

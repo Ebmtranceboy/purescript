@@ -11,6 +11,7 @@ Affjax                    bower install purescript-affjax --save
 Data.Argonaut             bower install purescript-argonaut --save
 Data.Array                bower install purescript-arrays --save
 FRP.Behavior              bower install purescript-behaviors --save
+Data.BigInt               bower install purescript-bigints --save
 Graphics.Canvas           bower install purescript-canvas --save
 Control.MonadZero         bower install purescript-control --save
 Control.Plus              bower install purescript-control --save
@@ -42,6 +43,7 @@ Data.Tuple                bower install purescript-tuples --save
 Turbine                   bower install purescript-turbine --save
 Data.Validation.Semigroup bower install purescript-validation --save
 Web.HTML                  bower install purescript-web-html --save
+Audio.WebAudio.Oscillator bower install purescript-webaudio --save
 
 import Control.Monad.ST(newSTRef)
 import Control.MonadZero(guard)
