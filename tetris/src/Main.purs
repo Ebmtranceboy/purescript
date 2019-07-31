@@ -2,8 +2,8 @@ module Main where
 
 import Prelude
 import Data.Int (toNumber)
-import Data.Array ((!!),(\\),(..),any,length,filter,head,all)
-import Data.Maybe (fromJust)
+import Data.Array ((!!),(\\),(..),any,length,filter,head,all,foldM)
+import Data.Maybe (Maybe(..), fromJust)
 import Data.Foldable(or,foldr,foldl)
 import Control.Alt (alt)
 import Partial.Unsafe (unsafePartial)
@@ -18,7 +18,7 @@ import Graphics.Canvas (getCanvasElementById, getContext2D
 import Graphics.Drawing (Drawing, render
                         , rectangle
                         , fillColor, filled, closed, text)
-import Graphics.Drawing.Font(font, monospace, bold)
+import Graphics.Drawing.Font(font, monospace, bold, fantasy)
 import Color (rgb, lighten)
 
 aVeryBigPowerOf2 = 33554432 :: Int -- 2^25
@@ -106,11 +106,18 @@ pieceToSquares (Piece p) =
 type State = {currentSeed :: Int
              , nextPiece :: Piece
              , currentGame :: Game
-             , score :: Int}
+             , score :: Int
+             , gameOver :: Boolean}
 
 renderState :: State -> Drawing
-renderState {currentSeed:_, score, nextPiece, currentGame: {piece: p, board}} = 
-  let squareToBox :: Int -> Int -> {pos:: Pos, col:: Colour} -> Drawing
+renderState { currentSeed:_
+            , score
+            , nextPiece
+            , currentGame: {piece: p, board}
+            , gameOver} = 
+  let blood = fillColor $ rgb 200 10 20
+      black = fillColor $ rgb 0 0 0
+      squareToBox :: Int -> Int -> {pos:: Pos, col:: Colour} -> Drawing
       squareToBox offx offy {pos: {x,y}, col: c} = 
         let color = rgb c.r c.g c.b
             var1 = lighten 0.2 color
@@ -156,6 +163,11 @@ renderState {currentSeed:_, score, nextPiece, currentGame: {piece: p, board}} =
            40.0 50.0 
            (fillColor $ rgb 70 70 70) 
            (show score)]
+  <> (if gameOver 
+      then [text (font fantasy 65 bold) 45.0 265.0 black "GAME"
+           ,text (font fantasy 65 bold) 45.0 335.0 black "OVER!!"
+           ,text (font fantasy 64 bold) 50.0 270.0 blood "GAME"
+           ,text (font fantasy 64 bold) 50.0 340.0 blood "OVER!!"] else [])
 
 floorCollision :: Piece -> Boolean
 floorCollision p = 
@@ -200,8 +212,8 @@ unusedRows b = filter (\j ->
     not $ any (\{pos: {x:_,y:j'},col:_} -> j==j') b
     ) $ 0..vertbounds
 
-lowestUnused :: Board -> Int 
-lowestUnused b = unsafePartial (fromJust $ head $ unusedRows b)
+lowestUnused :: Board -> Maybe Int 
+lowestUnused b = head $ unusedRows b
 
 changeRow :: Int -> Int -> Board -> Board
 changeRow j j' = 
@@ -210,14 +222,15 @@ changeRow j j' =
            then {pos:{x:i,y:j'},col:v} 
            else {pos:{x:i,y:j''},col:v})
 
-dropRow :: Board -> Int -> Board
-dropRow b j = 
-     if lowestUnused b < j 
-     then changeRow j (lowestUnused b) b 
-     else b
+dropRow :: Board -> Int -> Maybe Board
+dropRow b j = case lowestUnused b of
+  Just l -> if l < j 
+             then Just $ changeRow j l b 
+             else Just b
+  _      -> Nothing
 
-dropRows :: Board -> Board
-dropRows b = foldl dropRow b $ 0..vertbounds 
+dropRows :: Board -> Maybe Board
+dropRows b = foldM dropRow b $ 0..vertbounds 
 
 clearRow :: Board -> Int -> Board
 clearRow b j = b \\ filter (\{pos:{x:_,y:j'},col:_} -> j'==j) b
@@ -231,10 +244,10 @@ fullRow b j = all (\i -> lookup {x:i,y:j} b) $ 0..horizbounds
 fullRows :: Board -> Array Int
 fullRows b = filter (fullRow b) $ 0..vertbounds
 
-boardHandler :: Board -> {gain :: Int, board :: Board}
+boardHandler :: Board -> {gain :: Int, maybeBoard :: Maybe Board}
 boardHandler b = 
   let full = fullRows b
-  in {gain: length full, board: dropRows $ foldl clearRow b full}
+  in {gain: length full, maybeBoard: dropRows $ foldl clearRow b full}
 
 addToBoard :: Piece -> Board -> Board
 addToBoard p b = pieceToSquares p <> b
@@ -297,7 +310,8 @@ initialState seed =
    in { currentSeed: gen
       , nextPiece: val
       , currentGame: {piece: dummy, board: emptyBoard}
-      , score: 0}
+      , score: 0
+      , gameOver: false}
 
 scene :: Int -> { w :: Number, h :: Number } -> Behavior Drawing
 scene seed { w, h } = pure background 
@@ -315,13 +329,15 @@ scene seed { w, h } = pure background
           p' = moveDown g.piece
       in if floorCollision p' || boardCollision p' g.board 
          then 
-           let {gain, board} = boardHandler $ addToBoard g.piece g.board
-           in { currentSeed: gen
-              , nextPiece: val
-              , currentGame: { piece: st.nextPiece 
-                             , board}
-              , score: st.score + gain}
-          else st{currentGame{piece = p'}}
+           let {gain, maybeBoard} = boardHandler $ addToBoard g.piece g.board
+           in case maybeBoard of
+                Just board -> { currentSeed: gen
+                              , nextPiece: val
+                              , currentGame: { piece: st.nextPiece, board}
+                              , score: st.score + gain
+                              , gameOver: st.gameOver}
+                _          -> st{gameOver = true}
+         else st{currentGame{piece = p'}}
     else st{currentGame = refreshGame code st.currentGame}  
     ) (down `alt`(const "trigger" <$> interval 1000)) $ initialState seed
 
