@@ -4,6 +4,8 @@ Control.Apply
 Control.Monad
 Data.Eq
 Data.Ordering
+Data.Symbol
+Prim.RowList
 (...)
 
 Control.Monad.Aff         bower install purescript-aff --save
@@ -29,9 +31,11 @@ Math                      bower install purescript-math --save
 Data.Maybe                bower install purescript-maybe --save
 Data.Monoid               bower install purescript-monoid --save
 Data.Newtype              bower install purescript-newtype --save
+Data.Map                  bower install purescript-ordered-collections --save
 Partial.Unsafe            bower install purescript-partial --save
 Effect.Random             bower install purescript-random --save
 Data.Ratio                bower install purescript-rationals --save
+Record                    bower install purescript-record --save
 Run                       bower install purescript-run --save
 Data.Set                  bower install purescript-sets --save
 Control.Monad.ST          bower install purescript-st --save
@@ -40,6 +44,7 @@ Data.Char                 bower install purescript-strings --save
 Thermite                  bower install purescript-thermite --save
 Control.Monad.State       bower install purescript-transformers --save
 Data.Tuple                bower install purescript-tuples --save
+Type.Prelude              bower install purescript-typelevel-prelude --save
 Turbine                   bower install purescript-turbine --save
 Data.Validation.Semigroup bower install purescript-validation --save
 Web.HTML                  bower install purescript-web-html --save
@@ -47,17 +52,19 @@ Audio.WebAudio.Oscillator bower install purescript-webaudio --save
 
 import Control.Monad.ST(newSTRef)
 import Control.MonadZero(guard)
-import Data.Array(foldM)
+import Data.Array(foldM, catMaybes)
 import Data.Array.Partial(head)
 import Data.Char(toCharCode)
 import Data.Enum(fromEnum)
-import Data.Foldable(sum, product, foldM)
+import Data.Foldable(sum, product, foldM,maximum)
 import Data.Function.Uncurried(Fn's, mkFn's, runFn's)
 import Data.Int(floor, fromStringAs, toStringAs, binary, octal, hexadecimal, decimal, base36, radix)
 import Data.List(fromFoldable, filterM, toUnfoldable)
 import Data.Maybe(fromJust)
-import Data.String(toCharArray)
+import Data.String(toCharArray, singleton)
 import Partial.Unsafe (unsafePartial)
+import Data.Tuple(uncurry)
+import Data.Ord(min,max)
 
 class Eq a where
   eq :: a -> a -> Boolean
@@ -178,3 +185,9 @@ runState (do
   sumArray [1, 2, 3]
   sumArray [4, 5]
   sumArray [6]) 0
+
+vowelsRegex :: Regex
+vowelsRegex =
+  unsafePartial
+    case regex "[aeiou]" (RegexFlags regexFlags) of
+      Right r -> r

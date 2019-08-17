@@ -4,12 +4,14 @@ import Prelude
 import Effect (Effect)
 import Effect.Console (logShow)
 import Control.Monad.Except(runExcept)
+import Data.Traversable(traverse_)
 import Data.Generic.Rep(class Generic)
 import Data.Generic.Rep.Show(genericShow)
 import Foreign.Class (class Decode, class Encode)
 import Foreign.Generic (F, decodeJSON, defaultOptions, encodeJSON, genericDecode, genericEncode)
 import DOM.Editor as DOM
 
+{-
 data Maybe = Nothing
   | Just { fromJust  :: Array Int}
 
@@ -23,7 +25,7 @@ instance encodeMaybe :: Encode Maybe where
 
 instance showMaybe :: Show Maybe where
   show = genericShow
-
+-}
 main :: Effect Unit
 main = do
   setup <- DOM.setup
@@ -44,7 +46,8 @@ main = do
   
   inputFile <- DOM.createElement "input" setup.document
   _ <- DOM.setAttribute "type" "file" inputFile
-  inputListener <- DOM.eventListener (\ev -> do
+           
+  _ <- DOM.addEventListener (\ev -> do
            DOM.withTextReader (\json -> do
              _ <- DOM.setTextContent json textArea
              _ <- DOM.setTextContent (show $ runExcept (decodeJSON  json :: F {record :: Array {key1 :: Int, key2 :: String}, status :: Boolean})) decode
@@ -52,21 +55,23 @@ main = do
              ) ev
            
            fileName <- DOM.fileName inputFile
-           clickListener <- DOM.eventListener (\_ev -> do
+           _ <- DOM.addEventListener (\_ev -> do
                       suffix <- DOM.dateTimeTag
-                      _ <- setup.saveText textArea (suffix <> fileName) _ev
-                      _ <- DOM.removeEventListener clickListener DOM.click button
-                      pure unit
-                  ) 
-           _ <- DOM.addEventListener clickListener DOM.click button
+                      setup.saveText textArea (suffix <> fileName) _ev
+                  ) DOM.click button
+           _ <- DOM.removeChild inputFile
            pure unit
-       )
-  _ <- DOM.addEventListener inputListener DOM.change inputFile
+       ) DOM.change inputFile
  
   _ <- DOM.appendChild inputFile setup.body
   _ <- DOM.appendChild editor setup.body
-  
+  pure unit
+
+
+{-  
   logShow $ encodeJSON $ Just {fromJust:[1, 2, 3]}
   logShow $ runExcept (decodeJSON "{\"tag\":\"Just\",\"contents\":{\"fromJust\":[1,2,3]}}" :: F Maybe)  
   logShow $ encodeJSON Nothing
   logShow $ runExcept (decodeJSON "{\"tag\":\"Nothing\"}" :: F Maybe)
+
+-}

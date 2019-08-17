@@ -8,7 +8,7 @@ import Web.DOM.Node ( Node, appendChild, parentNode, removeChild
                     , setTextContent, fromEventTarget, textContent) as DOM
 import Web.DOM.NonElementParentNode (getElementById) as DOM
 import Web.Event.Event (Event,EventType,target) as Event
-import Web.Event.EventTarget (addEventListener, eventListener,EventListener, removeEventListener) as Event
+import Web.Event.EventTarget (addEventListener, eventListener) as Event
 import Web.Event.Internal.Types(EventTarget) as Event
 import Web.HTML.Event.EventTypes (click,change) as Event
 import Web.HTML (Window, window) as HTML
@@ -100,26 +100,17 @@ getElementById str doc =
   (\x -> DOM.toNode $ unsafePartial $ fromJust x) 
     <$> DOM.getElementById str (DOM.toNonElementParentNode doc)
 
-eventListener :: (Event.Event -> Effect Unit) -> Effect Event.EventListener
-eventListener cb = Event.eventListener cb
-
-addEventListener :: Event.EventListener 
+addEventListener :: (Event.Event -> Effect Unit)
                  -> Event.EventType 
                  -> DOM.Node                  -> Effect Unit 
-addEventListener listener ev node = Event.addEventListener 
+addEventListener cb ev node = do
+  listener <- (Event.eventListener cb)
+  Event.addEventListener 
            ev 
-           listener 
+           listener
            false 
            (DOM.toEventTarget (unsafePartial $ fromJust 
                                              $ DOM.fromNode node))
-
-removeEventListener :: Event.EventListener -> Event.EventType -> DOM.Node -> Effect Unit
-removeEventListener listener ev node = 
-  Event.removeEventListener ev 
-                            listener 
-                            false
-                            (DOM.toEventTarget (unsafePartial $ fromJust 
-                                                              $ DOM.fromNode node))
 
 doClick :: DOM.Node -> Effect Unit
 doClick node = HTML.click (unsafePartial $ fromJust $ HTML.fromNode node)

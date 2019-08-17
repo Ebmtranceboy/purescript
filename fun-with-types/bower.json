@@ -1,5 +1,5 @@
 {
-  "name": "repl",
+  "name": "fun-with-types",
   "ignore": [
     "**/.*",
     "node_modules",
@@ -10,9 +10,7 @@
     "purescript-prelude": "^4.1.1",
     "purescript-console": "^4.2.0",
     "purescript-effect": "^2.0.1",
-    "purescript-cartesian": "^1.0.1",
-    "purescript-arrays": "^5.3.0",
-    "purescript-typelevel-measures": "^0.2.1",
+    "purescript-assert": "^4.1.0",
     "purescript-record": "^2.0.1",
     "purescript-strings": "^4.0.1"
   },
