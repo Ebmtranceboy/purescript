@@ -1,12 +1,14 @@
 module Main(module Main) where
 
 import Prelude
+
+import Data.Array (length, replicate, uncons, zipWith, (..), (:))
+import Data.Foldable (and, sum)
+import Data.Maybe (Maybe(..))
 import Effect (Effect)
-import Effect.Console (log)
-import Data.Array(uncons,(:),zipWith,replicate,(..),length)
-import Data.Maybe(Maybe(..)) 
+import Effect.Console (logShow)
 import Math as Math
-import Data.Foldable(and)
+import Partial.Unsafe (unsafePartial)
 
 data D a = D {value :: a, dual :: Array a}
 
@@ -16,6 +18,7 @@ instance showD :: Show a => Show(D a) where
 instance functorD :: Functor D where
   map f (D {value, dual}) = D {value: f value, dual: map f dual}
 
+zipWith' :: forall a b c. (a -> b -> c) -> a -> b -> Array a -> Array b -> Array c
 zipWith' f l r [] [] = []
 zipWith' f _ r a [] = map (flip f r) a
 zipWith' f l _ [] b = map (f l) b
@@ -75,7 +78,7 @@ instance divisionRingD :: DivisionRing a => DivisionRing (D a) where
     
 instance commutativeRingD :: CommutativeRing a => CommutativeRing (D a)
 
-instance euclideanRingDNumber :: EuclideanRing (D Number) where
+instance euclideanRingDNumber :: (CommutativeRing a, DivisionRing a) => EuclideanRing (D a) where
   degree _ = 1
   div z z' = z * (recip z')
   mod z z' = zero
@@ -84,69 +87,100 @@ sin :: D Number -> D Number
 sin (D {value:a, dual: a'}) = 
    D  {value: Math.sin a, dual: Math.cos a .* a'}
 
+cos :: D Number -> D Number
+cos (D {value:a, dual: a'}) = 
+   D  {value: Math.cos a, dual: -Math.sin a .* a'}
+
+tan :: D Number -> D Number
+tan (D {value:a, dual: a'}) = 
+   D  {value: Math.tan a, dual: (1.0 / (Math.cos a * Math.cos a)) .* a'}
+
 sqrt :: D Number -> D Number
 sqrt (D {value:a, dual: a'}) = 
    let sqrta = Math.sqrt a
    in D {value: sqrta, dual: (recip $ 2.0 * sqrta) .* a'}
+   
+exp :: D Number -> D Number
+exp (D {value:a, dual: a'}) = 
+   let expa = Math.exp a
+   in D {value: expa, dual: expa .* a'}
+
+log :: D Number -> D Number
+log (D {value:a, dual: a'}) = 
+  D {value: Math.log a, dual: (1.0/a) .* a'} 
+
+
+asin :: D Number -> D Number
+asin (D {value:a, dual: a'}) = 
+  D {value: Math.asin a, dual: (1.0/Math.sqrt(1.0-a*a)) .* a'} 
+
+acos :: D Number -> D Number
+acos (D {value:a, dual: a'}) = 
+  D {value: Math.acos a, dual: (-1.0/Math.sqrt(1.0-a*a)) .* a'} 
+
+atan :: D Number -> D Number
+atan (D {value:a, dual: a'}) = 
+  D {value: Math.atan a, dual: (1.0/(1.0+a*a)) .* a'} 
+
+mathsinh :: Number -> Number
+mathsinh x = (Math.exp x - Math.exp (-x)) / 2.0
+
+mathcosh :: Number -> Number
+mathcosh x = (Math.exp x + Math.exp (-x)) / 2.0
+
+mathtanh :: Number -> Number
+mathtanh x = (Math.exp x - Math.exp (-x)) / (Math.exp x + Math.exp (-x))
+
+sinh :: D Number -> D Number
+sinh (D {value:a, dual: a'}) = 
+  D {value: mathsinh a, dual: (mathcosh a) .* a'} 
+
+cosh :: D Number -> D Number
+cosh (D {value:a, dual: a'}) = 
+  D {value: mathcosh a, dual: (mathsinh a) .* a'} 
+
+tanh :: D Number -> D Number
+tanh (D {value:a, dual: a'}) = 
+  D {value: mathtanh a, dual: (1.0 / (mathcosh a * mathcosh a)) .* a'} 
+
+{-
+
+asinh :: D Number -> D Number
+asinh (D {value:a, dual: a'}) = 
+  D {value: Math.asinh a, dual: (1.0/Math.sqrt(1.0+a*a)) .* a'} 
+   
+acosh :: D Number -> D Number
+acosh (D {value:a, dual: a'}) = 
+  D {value: Math.acosh a, dual: (1.0/Math.sqrt(a*a-1.0)) .* a'} 
+
+atanh :: D Number -> D Number
+atanh (D {value:a, dual: a'}) = 
+  D {value: Math.atanh a, dual: (1.0/(1.0-a*a)) .* a'} 
+  -}
 
 d :: forall a. Semiring a => Int -> D a
 d n = D {value: zero, dual: replicate n zero <> [one]}
 
-diff' :: forall a b. Semiring a => (Array (D a) -> b) -> Array (D a) -> b
-diff' f vars = f $ zipWith (+) vars $ map d $ 0..length vars
+diffs :: forall a b. Semiring a => (Array (D a) -> b) -> Array (D a) -> b
+diffs f vars = f $ zipWith (+) vars $ map d $ 0..length vars
 
---diff :: forall a b. Semiring a => (Array (D a) -> b) -> Array (D a) -> Array b
-diff f vars 
+diff1 :: forall a b. Semiring b => Semiring a => (Array (D b) -> D a) -> Array (D b) -> a
+diff1 f vars 
   | D {value, dual} <- f $ zipWith (+) vars $ map d $ 0..length vars =
      case uncons dual of
      Just {head, tail} -> head
      _ -> zero
 
-{-
+-- retourne [a,b,c...] les coeff de l'equation de l'hyperplan tangent au point vars
+-- tels que ax+by+cz+...=0
+plane :: (Array (D Number) -> D Number) -> Array (D Number) -> Array Number
+plane f vars = 
+  let D{value, dual: grad} = diffs f vars
+   in grad <> [-1.0, value - (sum $ zipWith (*) grad $ ((_.value) <<< (\(D x) -> x)) <$> vars)]
 
-
-instance (Num a,Fractional a) => Fractional (R a) where
-   fromRational a = R (fromRational a) []
-   (R a a') / (R b b') = let s = 1/b in
-       R (a*s) ((a'*.b.-a.*b') *. (s*s))
-
-instance Floating a => Floating (R a) where
-   exp (R a a') = let e = exp a in R e (e .* a')
-   log (R a a') = R (log a) ((1/a) .* a')
-   cos (R a a') = R (cos a) (-sin a .* a')
-   sinh (R a a') = R (sinh a) (cosh a .* a')
-   cosh (R a a') = R (cosh a) (sinh a .* a')
-   asin (R a a') = R (asin a) ((1/(sqrt $ 1 - a^2)) .* a')
-   atan (R a a') = R (atan a) ((1/(a^2+1)) .* a')
-   acos (R a a') = R (acos a) ((-1/(sqrt $ 1 - a^2)) .* a')
-   asinh (R a a') = R (asinh a) ((1/(sqrt $ 1 + a^2)) .* a')
-   acosh (R a a') = R (acosh a) ((1/(sqrt $ a^2 - 1)) .* a')
-   atanh (R a a') = R (atanh a)  ((1/(1-a^2)) .* a')
-   pi = R (realToFrac pi) []
-
-instance (Num a,Ord a) => Ord (R a) where
-  (R x _) < (R y _) = x < y
-
-d n = R 0 (replicate n 0 ++ [1])
-
-g [x, y] = (x+2*y)^2/(x+y)
-
-diff f vars = dual $ f $ zipWith (+) vars $ map d [0..]
-image f vars = value $ f $ zipWith (+) vars $ map d [0..] 
-		
-		-- retourne [a,b,c...] les coeff de l'equation de l'hyperplan tangent au point vars
-plane f vars =  -- tels que ax+by+cz+...=0
-  let grad = diff f vars
-	in grad ++ [-1,negate $ subtract (image f vars) $ sum $ zipWith (*) grad $ map value vars]
-
-parallel [a,b,_] [a',b',_] = a*b' == a'*b
-interLine ([a,b,c], [a',b',c']) = ((b*c'-b'*c)/(a*b'-a'*b),(a'*c-a*c')/(a*b'-a'*b))
-
-test = diff (\[x,y]->x^3+y^2+x*y) [2, 5] == [17,12]
-
-
-
--}
 main :: Effect Unit
 main = do
-  log "Hello sailor!"
+  logShow $ diffs (unsafePartial $ \[x,y]-> (x+one)/(y-one)) [D{value: 2.0,
+                     dual:[]},D{value:5.0,dual:[]}] == D {value:0.75,dual:[0.25,-0.1875]}
+  logShow $ diffs (unsafePartial $ \[x,y]-> x*x*x+y*y+x*y) [D{value: 2.0,
+                     dual:[]},D{value:5.0,dual:[]}] == D {value:43.0,dual:[17.0,12.0]}

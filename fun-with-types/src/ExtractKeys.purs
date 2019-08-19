@@ -1,11 +1,16 @@
 module ExtractKeys where
 
 import Prelude
+
+import Control.Alt ((<|>))
+import Control.Applicative (pure)
+import Control.Apply (applySecond)
+import Data.Foldable (foldr)
+import Data.List (List, (:), toUnfoldable)
 import Effect (Effect)
 import Effect.Console (log)
 import Prim.RowList (kind RowList, Cons, Nil)
 import Type.Prelude (RLProxy(..), reflectSymbol, class IsSymbol, SProxy(..), class RowToList)
-import Data.List(List,(:),toUnfoldable)
 
 class Keys (xs :: RowList) where
   keysImpl :: RLProxy xs -> List String

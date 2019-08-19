@@ -16,6 +16,7 @@ FRP.Behavior              bower install purescript-behaviors --save
 Data.BigInt               bower install purescript-bigints --save
 Graphics.Canvas           bower install purescript-canvas --save
 Control.MonadZero         bower install purescript-control --save
+Control.Alt               bower install purescript-control --save
 Control.Plus              bower install purescript-control --save
 Debug.Trace               bower install purescript-debug --save
 Graphics.Drawing          bower install purescript-drawing --save
@@ -50,18 +51,19 @@ Data.Validation.Semigroup bower install purescript-validation --save
 Web.HTML                  bower install purescript-web-html --save
 Audio.WebAudio.Oscillator bower install purescript-webaudio --save
 
+import Control.Alt(alt)
 import Control.Monad.ST(newSTRef)
 import Control.MonadZero(guard)
 import Data.Array(foldM, catMaybes)
 import Data.Array.Partial(head)
 import Data.Char(toCharCode)
 import Data.Enum(fromEnum)
-import Data.Foldable(sum, product, foldM,maximum)
+import Data.Foldable(sum, product, foldM, maximum)
 import Data.Function.Uncurried(Fn's, mkFn's, runFn's)
-import Data.Int(floor, fromStringAs, toStringAs, binary, octal, hexadecimal, decimal, base36, radix)
+import Data.Int(floor, fromStringAs, toStringAs, binary, octal, hexadecimal, decimal, base36, radix, toNumber)
 import Data.List(fromFoldable, filterM, toUnfoldable)
-import Data.Maybe(fromJust)
-import Data.String(toCharArray, singleton)
+import Data.Maybe(fromJust, maybe)
+import Data.String(toCharArray, singleton, fromCodePointArray, codePointFromChar)
 import Partial.Unsafe (unsafePartial)
 import Data.Tuple(uncurry)
 import Data.Ord(min,max)
