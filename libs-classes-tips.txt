@@ -54,7 +54,7 @@ Audio.WebAudio.Oscillator bower install purescript-webaudio --save
 import Control.Alt(alt)
 import Control.Monad.ST(newSTRef)
 import Control.MonadZero(guard)
-import Data.Array(foldM, catMaybes)
+import Data.Array(foldM, catMaybes,sort)
 import Data.Array.Partial(head)
 import Data.Char(toCharCode)
 import Data.Enum(fromEnum)
@@ -63,10 +63,10 @@ import Data.Function.Uncurried(Fn's, mkFn's, runFn's)
 import Data.Int(floor, fromStringAs, toStringAs, binary, octal, hexadecimal, decimal, base36, radix, toNumber)
 import Data.List(fromFoldable, filterM, toUnfoldable)
 import Data.Maybe(fromJust, maybe)
-import Data.String(toCharArray, singleton, fromCodePointArray, codePointFromChar)
+import Data.String(toCharArray, singleton, fromCodePointArray, codePointFromChar,stripPrefix,Pattern)
 import Partial.Unsafe (unsafePartial)
 import Data.Tuple(uncurry)
-import Data.Ord(min,max)
+import Data.Ord(min,max,abs)
 
 class Eq a where
   eq :: a -> a -> Boolean
