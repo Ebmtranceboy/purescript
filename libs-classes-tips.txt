@@ -124,6 +124,20 @@ data Tuple a b = Tuple a b
 class Monad m <= MonadState s m | m -> s where
   state :: forall a. (s -> (Tuple a s)) -> m a
 
+class Functor env <= Extend env where -- that is : map f = extend (f <<< duplicate)
+  duplicate : forall a. env a -> env (env a) 
+  -- that is : duplicate = extend identity
+  extend :: forall a b. (env a -> b) -> env a -> env b
+  -- that is : extend f = map f <<< duplicate
+
+class Comonad env where
+  extract :: forall a. env a -> a
+
+class Comonad (env e) <= Environment env e a where
+  ask :: env e a -> e
+  asks :: forall e'. (e -> e') -> env e a -> e'
+  local :: forall e'. (e -> e') -> env e a -> env e' a
+
 class Semiring a where
   add :: a -> a -> a
   zero :: a
@@ -193,3 +207,22 @@ vowelsRegex =
   unsafePartial
     case regex "[aeiou]" (RegexFlags regexFlags) of
       Right r -> r
+
+> :paste
+… merch3 = ado
+…   x <- "teeshirt" : "sweater" : Nil
+…   y <- "large" : "medium" : "small" : Nil
+…   z <- "black" : "white" : Nil 
+…   in (x <> "-" <> y <> "-" <> z)
+… 
+
+> :paste
+… merch4 = do
+…   x <- "teeshirt" : "sweater" : Nil
+…   y <- "large" : "medium" : "small" : Nil
+…   z <- "black" : "white" : Nil 
+…   pure (x <> "-" <> y <> "-" <> z)
+… 
+
+> merch3 == merch4
+true

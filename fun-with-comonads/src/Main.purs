@@ -1,9 +1,9 @@
 module Main where
 
-import Control.Comonad
-import Data.String
-import Data.Tuple
-import Env
+import Control.Comonad (extend, extract, (=>=))
+import Data.String (codePointFromChar, fromCodePointArray, take)
+import Data.Tuple (Tuple(..), fst)
+import Env (Env(..), ask, asks, local)
 import Prelude
 
 import Data.Array (replicate)
@@ -40,15 +40,16 @@ setPadChar c set = set{padChar = c}
 
 main :: Effect Unit
 main = do
-  log $ show $ ask $ Env 42 "Hello sailor!"
-  log $ show $ asks fst (Env (Tuple "first" "second") 1337) 
-  log $ show $ getPadChar context
-  log $ show $ asks (_.padAmount) context
-  log $ trunc context
-  log $ pad context
-  log $ trunc <<< (extend pad) $ context
-  log $ pad =>= trunc $ context
-  log $ trunc =>= pad $ context
-  log $ trunc =>= pad <<< local (setPadChar '_') =>= pad $ context
+  log $ show $ ask $ Env 42 "Hello sailor!"                         -- 42
+  log $ show $ asks fst (Env (Tuple "first" "second") 1337)         -- "first"
+  log $ show $ getPadChar context                                   -- '*'
+  log $ show $ asks (_.padAmount) context                           -- 3
+  log $ extract context                                             -- Hello World
+  log $ trunc context                                               -- Hello
+  log $ pad context                                                 -- ***Hello World***
+  log $ trunc <<< (extend pad) $ context                            -- ***He
+  log $ pad =>= trunc $ context                                     -- ***He
+  log $ trunc =>= pad $ context                                     -- ***Hello***
+  log $ trunc =>= pad <<< local (setPadChar '_') =>= pad $ context  -- ***___Hello___***
 
 

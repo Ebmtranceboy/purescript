@@ -1,7 +1,7 @@
 module Env where
 
 import Prelude
-import Control.Comonad(class Comonad, class Extend, duplicate, extract)
+import Control.Comonad(class Comonad, class Extend)
 
 data Env e a = Env e a
 
@@ -24,7 +24,7 @@ duplicate' (Env e a) = Env e (Env e a)
 
 instance extendEnv :: Extend (Env e) where
   extend :: forall e a b. (Env e a -> b) -> Env e a -> Env e b
-  -- that is : --extend f = map f <<< duplicate
+  -- that is : extend f = map f <<< duplicate
   extend f (Env e a) = Env e (f (Env e a))
 
 instance comonadEnv :: Comonad (Env e) where
