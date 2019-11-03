@@ -63,7 +63,8 @@ import Data.Function.Uncurried(Fn's, mkFn's, runFn's)
 import Data.Int(floor, fromStringAs, toStringAs, binary, octal, hexadecimal, decimal, base36, radix, toNumber)
 import Data.List(fromFoldable, filterM, toUnfoldable)
 import Data.Maybe(fromJust, maybe)
-import Data.String(toCharArray, singleton, fromCodePointArray, codePointFromChar,stripPrefix,Pattern)
+import Data.String(toCodePointArray, singleton, fromCodePointArray, codePointFromChar,stripPrefix,Pattern)
+import Data.String.CodeUnits(toCharArray, singleton)
 import Partial.Unsafe (unsafePartial)
 import Data.Tuple(uncurry)
 import Data.Ord(min,max,abs)
@@ -97,6 +98,31 @@ class Functor f where
   map :: forall a b. (a -> b) -> f a -> f b
 
 infixl 4 map as <$>
+
+instance covariantArrow :: Covariant (forall a. a -> x) where
+  fmap :: (x -> y) -> (a -> x) -> (a -> y) -- result is still a function a -> ...
+  fmap = (<<<)
+
+instance contravariantArrow :: Contravariant (forall b. x -> b) where
+  cmap :: (x -> b) (b -> y) -> (x -> y) -- result is still a function ... -> b
+  cmap = flip (<<<)
+  
+It appears that a functor (resp. cofunctor) instance can only be defined 
+for functions where variables x all are in positive (resp. negative) positions:
+
+p
+n -> p
+n -> (n -> p)
+(p -> n) -> p
+n -> (n -> (n -> p))
+n -> ((p -> n) -> p)
+((n -> p) -> n) -> p 
+(p -> (p -> n)) -> p 
+(p -> n) -> (n -> p)
+
+for example,
+instance covariantArrow2 :: Covariant (forall n. (x -> n) -> x) where
+  fmap :: (x -> y) -> ((x -> n) -> x) -> (x -> n) -> y
 
 class Functor f <= Apply f where
   apply :: forall a b. f (a -> b) -> f a -> f b 
@@ -170,6 +196,11 @@ class (CommutativeRing a) <= EuclideanRing a where
 --Haskell's Fractional:
 class (EuclideanRing a, DivisionRing a) <= Field a
 
+data NonEmpty a = NonEmpty a (Array a)
+
+instance eqNonEmpty :: (Eq a, Eq (Array a)) => Eq (NonEmpty a) where
+  eq (NonEmpty x xs) (NonEmpty y ys) = x == y && xs == ys
+
 > import Data.Array(head) as Array
 > Array.head xs
 (Just 1)
@@ -181,6 +212,15 @@ class (EuclideanRing a, DivisionRing a) <= Field a
 nonEmpty :: String -> Either String Unit
 nonEmpty "" = Left "Field cannot be empty"
 nonEmpty _  = Right unit
+
+newtype Person = Person
+  { firstName   :: String
+  , lastName    :: String
+  }
+
+person :: String -> String -> Person
+person firstName lastName =
+  Person { firstName, lastName}
 
 validatePerson :: Person -> Either String Person
 validatePerson (Person o) =
@@ -226,3 +266,17 @@ vowelsRegex =
 
 > merch3 == merch4
 true
+
+ mkdir show-instance
+$ cd show-instance
+$ spago init
+$ spago install generics-rep
+$ spago repl
+> import Data.Generic.Rep
+> import Data.Show
+> import Data.Generic.Rep.Show
+> data Action = Change String | Focus
+> derive instance genAction :: Generic Action _
+> instance showAction :: Show Action where show a = genericShow a
+> Change "hi"
+(Change "hi")

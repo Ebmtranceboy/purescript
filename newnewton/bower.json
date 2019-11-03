@@ -1,0 +1,21 @@
+{
+  "name": "newnewton",
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "bower_components",
+    "output"
+  ],
+  "dependencies": {
+    "purescript-prelude": "^4.1.1",
+    "purescript-console": "^4.2.0",
+    "purescript-effect": "^2.0.1",
+    "purescript-math": "^2.1.1",
+    "purescript-integers": "^4.0.0",
+    "purescript-foldable-traversable": "^4.1.1",
+    "purescript-arrays": "^5.3.1"
+  },
+  "devDependencies": {
+    "purescript-psci-support": "^4.0.0"
+  }
+}
