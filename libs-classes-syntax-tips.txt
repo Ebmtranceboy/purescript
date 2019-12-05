@@ -196,6 +196,13 @@ class (CommutativeRing a) <= EuclideanRing a where
 --Haskell's Fractional:
 class (EuclideanRing a, DivisionRing a) <= Field a
 
+type NaturalTransformation f g = forall a. f a -> g a
+infixr 4 type NaturalTransformation as ~>
+
+> import Data.Int
+> toStringAs hexadecimal 175
+"af"
+
 data NonEmpty a = NonEmpty a (Array a)
 
 instance eqNonEmpty :: (Eq a, Eq (Array a)) => Eq (NonEmpty a) where
