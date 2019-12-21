@@ -287,3 +287,64 @@ $ spago repl
 > instance showAction :: Show Action where show a = genericShow a
 > Change "hi"
 (Change "hi")
+
+
+newtype State s a = State { runState :: s -> {fst :: a, snd :: s} }  
+
+instance functorState :: Functor (State s) where
+  map f (State st) = State {runState: \s -> 
+                        (\{fst: b, snd} -> {fst: f b, snd}) (st.runState s)}
+
+instance applicativeState :: Applicative (State s) where
+  pure x = State {runState: \s -> {fst: x, snd: s} } 
+
+instance applyState :: Apply (State s)  where
+  apply = ap
+
+instance bindState :: Bind (State s) where  
+    bind (State h) f = State {runState: \s -> 
+                                 let {fst: a, snd: newState} = h.runState s  
+                                     State g = f a  
+                                  in g.runState newState
+                                 }  
+instance monadState :: Monad (State s)
+
+put :: forall a. a -> State (Array a) Unit  
+put a = State {runState: \xs -> {fst: unit, snd: snoc xs a}}
+
+getArray (State {runState}) = (runState []).snd
+
+
+import Data.Array(snoc)
+import Control.Monad.State(State(..), runState)
+import Data.Tuple(fst)
+import Control.Monad.State.Class(class MonadState, get, modify)
+
+put :: forall a st. Functor st => MonadState (Array a) st => a -> st Unit
+put x = void $ modify (flip snoc x)
+
+fromSeq :: forall a. State (Array a) (Array a) -> Array a
+fromSeq seq = fst $ runState seq []
+
+seqArray :: State (Array Int) (Array Int)
+seqArray = do
+  put 2
+  put 3
+  put 4
+  get
+
+
+class Interp a where
+  interp :: String -> a
+
+instance interpString :: Interp String where
+  interp a = a
+else instance interpFunction :: Interp a => Interp (String -> a) where
+  interp a b = interp (a <> b)
+else instance interpShow :: (Show b, Interp a) => Interp (b -> a) where
+  interp a b = interp (a <> show b)
+
+i = interp
+
+test = i "foo" 42 "bar" true "baz"
+
