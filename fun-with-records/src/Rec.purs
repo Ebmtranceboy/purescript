@@ -1,4 +1,4 @@
-module Rec (class RecConToFun, recConToFun_, rec, Example (Example)) where
+module Rec (class RecConToFun, recConToFun_, rec) where
 
 import Prelude
 
@@ -41,7 +41,3 @@ rec :: forall row list return fun final
     -> fun
 rec = recConToFun_ (RLProxy :: RLProxy list) {}
 
-data Example = Example { foo :: Int, bar :: String }
-
-instance showExample :: Show Example where
-  show (Example row) = "Example " <> show row

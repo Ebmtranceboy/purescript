@@ -1,30 +1,24 @@
 module Main where
 
 import Prelude
+
 import Effect (Effect)
 import Effect.Console (log)
-import Unsafe.Coerce(unsafeCoerce)
 
-type ShowBoxF a = 
-  { show :: a -> String
-  , value :: a
-  }
+newtype Showable = Showable (forall r. (forall a. Show a => a -> r) -> r)
+--type Exists f = ∀ r. (∀ a. f a -> r) -> r
+--newtype Showable =  Show a => Showable (Exists (a))
+-- (Question: can we write this using the type Exists from above?)
 
-data ShowBox
+mkShowable :: forall a. Show a => a -> Showable
+mkShowable a = Showable (_ $ a)
 
-mkShowBox :: forall a. ShowBoxF a -> ShowBox
-mkShowBox = unsafeCoerce
+instance showShowable :: Show Showable where
+  show (Showable a) = a show
 
-unShowBox :: forall r. (forall a. ShowBoxF a -> r) -> ShowBox -> r
-unShowBox = unsafeCoerce
-
-box :: ShowBox
-box = mkShowBox {show, value: 42}
-
-example :: String
-example = unShowBox (\{show, value} -> show value) box
+showables :: Array Showable
+showables = [mkShowable 1, mkShowable unit, mkShowable "hello"]
 
 main :: Effect Unit
 main = do
-  log example
-  
+  log $ show showables
