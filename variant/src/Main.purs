@@ -24,12 +24,12 @@ type MainRecord = RecordRows ()
 
 g :: Variant MainRecord -> String
 g = case_
-  # on (SProxy :: SProxy "phase") (const "Dispatch phase...")
+  # on (SProxy :: SProxy "phase") (const "Dispatch phase from g...")
   # on (SProxy :: SProxy "voltage") (const "Dispatch voltage...")
 
 h :: Variant MainRecord -> String
 h = default "unknown"
-  # on (SProxy :: SProxy "phase") (const "Dispatch phase...")
+  # on (SProxy :: SProxy "phase") (const "Dispatch phase from h...")
   
 somePhase :: forall r. Variant (phase :: Unit |r)
 somePhase = inj (SProxy :: SProxy "phase") unit

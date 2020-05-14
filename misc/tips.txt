@@ -1,0 +1,39 @@
+context <- traverse getContext2D =<< getCanvasElementById "myChart"
+
+newtype ChartBuilder
+  (appliesTo :: # Type)
+  (input :: # Type)
+  (output :: # Type)
+  = ChartBuilder (Builder (Record input) (Record output))
+
+
+instance rliConsCons ::
+class RowListIntersection
+  (acc :: RowList)
+  (xs :: RowList)
+  (ys :: RowList)
+  (res :: RowList)
+  | acc xs ys -> res
+
+
+instance rliNilXS :: RowListIntersection acc Nil trash acc
+instance rliNilYS :: RowListIntersection acc trash Nil acc
+ 
+  ( CompareSymbol xname yname ord
+  , Equals ord EQ isEq
+  , Equals ord LT isLt
+  , Or isEq isLT isEqOrLt
+  , If isEq
+      (RLProxy (Cons xname ty acc))
+      (RLProxy acc)
+      (RLProxy acc')
+  , If isEqOrLt
+      (RLProxy xs)
+      (RLProxy (Cons xname ty xs))
+      (RLProxy xs')
+  , If isLt
+      (RLProxy (Cons xname ty ys))
+      (RLProxy ys)
+      (RLProxy ys')
+  , RowListIntersection acc' xs' ys' res
+  ) => RowListIntersection acc (Cons xname ty xs) (Cons yname ty ys) res

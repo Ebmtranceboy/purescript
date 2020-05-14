@@ -2,13 +2,7 @@ module ExtractKeys where
 
 import Prelude
 
-import Control.Alt ((<|>))
-import Control.Applicative (pure)
-import Control.Apply (applySecond)
-import Data.Foldable (foldr)
 import Data.List (List, (:), toUnfoldable)
-import Effect (Effect)
-import Effect.Console (log)
 import Prim.RowList (kind RowList, Cons, Nil)
 import Type.Prelude (RLProxy(..), reflectSymbol, class IsSymbol, SProxy(..), class RowToList)
 
@@ -24,9 +18,6 @@ instance consKeys :: (IsSymbol name, Keys tail) => Keys (Cons name ty tail) wher
       first = reflectSymbol(SProxy :: SProxy name)
       rest = keysImpl (RLProxy :: RLProxy tail)
       
-keys :: forall row rl. RowToList row rl => Keys rl => Record row -> Array String
-keys _ = toUnfoldable $ keysImpl (RLProxy :: RLProxy rl)
+extractKeys :: forall row rl. RowToList row rl => Keys rl => Record row -> Array String
+extractKeys _ = toUnfoldable $ keysImpl (RLProxy :: RLProxy rl)
 
-main :: Effect Unit
-main = do
-  log "Hello sailor!"

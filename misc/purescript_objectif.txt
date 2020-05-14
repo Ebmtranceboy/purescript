@@ -1,0 +1,10 @@
+L'objectif du groupe est la création d'une association de développeurs PureScript désirant promouvoir ce langage en France. 
+
+Ce groupe s'adresse aussi bien aux programmeurs fonctionnels cheveronnés qui désirent partager leur savoir-faire, qu'aux programmeurs curieux d'apprendre comment la programmation fonctionnelle peut les aider à structurer leurs applications de manière à rendre leurs codes lisibles, extensibles et généralement plus courts qu'avec des langages impératifs.
+
+L'accent sera mis sur le langage Purescript qui permet efficacement un accès aisé et portable à toutes les fonctionnalités d'HTML5, mais il sera périodiquement fait référence à d'autres langages pour leur pertinence historique (Haskell) ou théorique (lambda calculus).  Selon les cas, les événements consisteront en 
+
+* un bilan des avancés dans le processus de développement de l'association
+* un échange de pointeurs vers des documentations utiles
+* coding-parties 
+* de simples moments pour rencontrer d'autres amateurs de ce fabuleux langage!

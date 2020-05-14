@@ -3,6 +3,8 @@ module Main where
 import Prelude
 import Rec(rec)
 
+import Question (flatten)
+
 import Effect (Effect)
 import Effect.Console (log)
 
@@ -20,3 +22,4 @@ main :: Effect Unit
 main = do
    log $ show $ rec Example1 "a" 1
    log $ show $ rec Example2 [1,2,3] false
+   log $ show $ flatten {a: 1, b: 3, d: {e: true, f: "eh"}}

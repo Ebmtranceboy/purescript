@@ -1,0 +1,68 @@
+PURESCRIPT TIPS
+---------------
+
+* When unexpected type error:
+1) Check that it doesn't happens for a let-defined function used several times, with different argument types (e.g. mapmap)
+2) If it is, the solution is to define it globally, providing a general type definition.
+
+* Don't get confused with lift versions:
+
+(<$>) :: forall a b f. Functor f => (a -> b) -> f a -> f b
+(<*>) :: forall a b f. Apply f => f (a -> b) -> f a -> f b
+zipWith :: forall a b c. (a -> b -> c) -> Array a -> Array b -> Array c
+
+e.g. add <$> [1,20] <*> [300,4000] == [301,4001,320,4020]
+
+e.g. zipWith add [1,20] [300,4000] == [301,4020]
+     zipWith (zipWith add) [[1,20],[300,4000]] [[42,314],[666]]
+     == [[43,334],[966]]
+     zipWith add <$> [[1,20],[300,4000]] <*> [[42,314],[666]] 
+     == [[43,334],[667],[342,4314],[966]]
+
+grid :: forall a b c f. Functor f => (a -> b -> c) -> f a -> f b -> f (f c)
+grid f xs ys = (\y -> (\x -> f x y) <$> xs) <$> ys
+
+e.g. grid add [1,20] [300,4000] == [[301,320],[4001,4020]]
+
+mapmap :: forall a b f. Functor f => (a -> b) -> f (f a) -> f (f b)
+mapmap = (<$>) <<< (<$>)
+
+e.g. (_ + 1) `mapmap` [[1,20],[300,4000]] == [[2,21],[301,4001]]
+
+* ST
+
+Q: why
+ST.run do
+  stObj <- STObj.new
+  stObj' <- foldM groupFn stObj somePureValue
+  unsafeFreeze stObj'
+
+A: groupFn probably doesn’t have a signature. Anything that’s in a binding and uses ST needs a signature.
+
+* "mutable" arrays
+
+import Control.Monad.ST (ST, run, for)
+import Data.Array.ST (STArray, peek, poke, withArray)
+
+arr :: Array Int
+arr = run (withArray build (replicate n zero))
+
+build :: forall h. STArray h Int -> ST h Unit
+build a =
+  for 1 (n-1) \ i -> do
+    ma1 <- peek (i-1) a
+    let a1 = unsafePartial $ fromJust ma1
+    poke i (a1+1) a
+
+
+* Q : what is the “standard” way to shuffle an array in purescript?
+just use FFI?
+it seems hard to do with ST as you need Effect as well
+
+A : You can lift ST into Effect with liftST
+
+* string-splitting:
+import Data.Int (fromString)
+import Data.String (Pattern(..), split)
+fromString <$> split (Pattern "") "11068" == [(Just 1),(Just 1),(Just 0),(Just 6),(Just 8)]
+traverse fromString $ split (Pattern "") "11068" == (Just [1,1,0,6,8])

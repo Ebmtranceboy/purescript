@@ -68,6 +68,7 @@ import Data.String.CodeUnits(toCharArray, singleton)
 import Partial.Unsafe (unsafePartial)
 import Data.Tuple(uncurry)
 import Data.Ord(min,max,abs)
+import Data.Either (note, hush)
 
 class Eq a where
   eq :: a -> a -> Boolean
@@ -348,3 +349,16 @@ i = interp
 
 test = i "foo" 42 "bar" true "baz"
 
+
+import Data.Variant (SProxy(..), Variant, inj)
+
+type TestRow = (a :: Int, b :: Boolean)
+
+type TestRec = Record TestRow
+
+rab = {a: 1, b: true} :: TestRec
+
+type TestVar = Variant TestRow
+
+va = inj (SProxy :: SProxy "a") 6     :: TestVar
+vb = inj (SProxy :: SProxy "b") false :: TestVar

@@ -1,0 +1,16 @@
+
+hdgarrood Today at 2:21 AM
+Is it a problem that I can write foreign import data What :: Symbol ?
+
+
+natefaubion 6 hours ago
+No this is how we support data kinds
+:+1:
+1
+
+
+hdgarrood  6 hours ago
+So the idea is that you declare the "type" with an empty data declaration, and declare the "constructors" with foreign import data?
+
+natefaubion  6 hours ago
+Yes
