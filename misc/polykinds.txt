@@ -14,3 +14,110 @@ So the idea is that you declare the "type" with an empty data declaration, and d
 
 natefaubion  6 hours ago
 Yes
+
+Type In Type
+The type-checker now supports TypeInType (or Type :: Type), so the old Kind data type and namespace is now gone. Kinds and types are the same and exist in the same namespace.
+
+Previously one could do:
+
+foreign import kind Boolean
+foreign import data True :: Boolean
+foreign import data False :: Boolean
+Where the kind Boolean and type Boolean were two different things. This is no longer the case. The Prim kind Boolean is now removed, and you can just use Prim type Boolean in the same way. This is a breaking change.
+
+The compiler still supports the old foreign import kind syntax but it warns that it's deprecated.
+
+foreign import kind Foo
+Foreign kind imports are deprecated and will be removed in a future release. Use 'foreign import data' instead.
+
+It is treated internally as:
+
+foreign import data Foo :: Type
+Likewise, kind imports and exports are deprecated and treated the same as a type import or export.
+
+Kind imports are deprecated and will be removed in a future release. Omit the 'kind' keyword instead.
+
+The special unary # syntax for row kinds is still supported, but deprecated and will warn. There is now Prim.Row :: Type -> Type which can be used like a normal type constructor.
+
+Unary '#' syntax for row kinds is deprecated and will be removed in a future release. Use the 'Row' kind instead.
+
+All of these deprecations have suggested fixes in the JSON output, so tools like purescript-suggest (or your IDE plugin) can automatically apply them.
+
+Kind Signatures
+With PolyKinds, all type-level declarations are generalized.
+
+data Proxy a = Proxy
+Previously, this had the Type-defaulted kind Type -> Type. Now this will be generalized to forall k. k -> Type.
+
+When writing polymorphic things, it's often nice to write signatures. Since we don't really quantify over free type variables, it's also necessary in the case that two poly-kinded arguments must have the same kind. I've introduced kind signature declarations, similar to standalone kind signatures in GHC.
+
+data Proxy :: forall k. k -> Type
+data Proxy a = Proxy
+In GHC, all signatures use the type prefix, but I've opted to have it use the same keyword as the subsequent declaration because we already have foreign import data (rather than foreign import type) and because it makes things align nicer. Signatures have the same rule as value-level signatures, so they must always be followed by the "real" declaration.
+
+I've also introduced the Prim.Constraint kind to support signatures on classes. For example, Prim.Row.Cons now has the signature:
+
+class Cons :: forall k. Symbol -> k -> Row k -> Row k -> Constraint
+Implementation Details
+TypeChecker.Kinds
+Obviously this is where the bulk of the changes have happened since it is completely rewritten. It's mostly a straightforward implementation of the paper, but extended in a few ways:
+
+There are more forms to typecheck. All type-level declarations are now kind-checked, whereas before only data types and synonyms were checked. We need to check and kind-elaborate instances and classes due to the way kinds can influence dispatch. The primary example I've come up with is that the Functor instance for Proxy is really an instance for Proxy @Type, and we need that information up front when solving.
+A subsumption check was added as part of instantiation to support higher-ranked kinds. In the paper it's just unification.
+Unification has been extended to work with rows.
+Type synonyms are expanded in kinds.
+The API surface area is a little larger to account for this of course. The main change is that kindsOfAll accepts class declarations as part of the binding group.
+
+TypeChecker.Monad
+The substitution state has been extended to track the kinds of unification variables. An important part of polykinds is that when solving unification variables, we must also unify the kinds of the variable and the solution.
+I've removed the fresh state for kinds, and everything just uses the fresh state for types.
+I've added a lot of debug code for printing the environment and substitutation state. I can remove this, but it was invaluable for me during this process so I'd prefer to keep it.
+TypeChecker.Synonyms
+Synonym expansion takes kind arguments, which are also substituted. This is needed for things like polykinded type class dictionaries, because the fields in the dictionary record are annotated with the kind provided to the synonym.
+
+TypeChecker.Unify
+This has changes for kind applications, and also kind checks unification solutions.
+
+Types
+The Kind/Type distinction is gone, so anything previously referencing kinds is now replaced with Type.
+KindApp was added for instantiated kinds.
+Skolems are tagged with their kinds. This is needed in the solver. Previously the kind-checker looked up it's type variable in the environment but it isn't the case that a skolem's type variable is necessarily in scope. This was only a coincidence because it only checked explicitly provided kinds.
+Constraint now carries kinds as well as types. This is necessary for solving things like RowToList where the kind of RowList depends on the kind of the Row we are converting. In a future with full ConstraintKinds, this will just be KindApps and TypeApps.
+One interesting consequence of supporting rows in the kind-checker is that () has the kind forall k. k -> Row k. This means the kind checker will annotate () with a kind-application (eg. () @Type). I added a pattern synonym REmptyKinded and replaced cases of REmpty with this to account for anything that relies on matching REmpty to work, but now also must handle KindApp REmpty ty. Really RCons should also have a kind application of some sort, but since it's trivial enough to infer the kind, I didn't bother.
+
+Sugar.TypeClasses
+The overall desugaring for type classes remains the same, but I've had to change how they are added and represented in the environment. Previously the compiler just turned a class into a type synonym for a record, and added that kind to the type environment. This meant that classes had a kind Type instead of Constraint, which is not compatible with top-level kind signatures. I've changed this type synonym to have the name-mangled form Class$Dict so that the actual class can use the "real" name in the environment. You can't actually write this name-mangled form, but it might need some care in IDE code to prevent it from suggesting it for import.
+
+Since this happens before type-checking (and thus before kind-checking), there's some dodgy code to expand type synonyms before kinds are known. I don't know if this is a problem in practice (you might just get garbage ill-kinded results and bad errors). My opinion is that this desugaring happens too soon in the pipeline and should happen after other type declarations are kind checked.
+
+Sugar.BindingGroups
+Since all type-level declarations are kind checked now, we need to do a more thorough dependency analysis.
+
+Classes can appear in a recursive binding group.
+There is a distinction between depending on a declaration or its signature. If a signature is provided, a term only incurs a dependency on the signature and not the declaration itself. The exception is type synonyms. Since we need to actually expand the synonym during kind-checking, we need to depend on the declaration.
+Cycles with kind signatures are not allowed.
+Errors and Pretty.Types
+The kind-checker elaborates all foralls to have explicit kinds, and also introduced explicit kind-applications. In general, we don't want to expose this to users in errors and warnings. For example, with the following top-level declaration:
+
+data Proxy a = Proxy
+test = Proxy
+You'll get a warning with a type signature. The fully elaborated signature is:
+
+forall (t5 :: Type) (t6 :: t5). Proxy @t5 t6
+But we still suggest:
+
+forall t6. Proxy t6
+By default when printing these types in errors, all kind applications and kinds annotations are removed, with type variables being pruned based on usage. This gives us something that you'd write today in the existing compiler. Note that I am not doing this cleanup when printing error hints, because I think it adds important context. When the --verbose-errors flag is provided, you will always see fully elaborated kinds in errors.
+
+Note that there is no support for explicit kind-applications in the parser, so these types can't necessarily be written.
+
+Future Work
+My hope is that this PR also enables several long-desired type-level features:
+
+ConstraintKinds - I think this should be straightforward. It's primarily the matter of replacing the second-class Constraint data type with Type and doing work in the solver (the devil is always in the details, however). Otherwise the kind-checking aspect should just work.
+DataKinds - This is a matter of putting appropriate data constructor signatures in the type enivironment and any syntactic changes. Otherwise it should just work.
+ExistentialQuantification - This will need syntactic changes, a small addition to the kind-checker for constructor declarations, and some work to introduce the existential type variables and dictionaries in case branches.
+I also think there's some potential improvements we could make to the architecture:
+
+As I mentioned, I think we should be doing type class desugaring later in the pipeline.
+I would like to explore adding an application context to the kind checker and expanding synonyms there as we elaborate types. There's a lot of ad-hoc calls to replaceTypeSynoynms and it's very easy to get wrong. Since we need to kind check everything now anyways, I think it would be straightforward enough to do this in a single place.

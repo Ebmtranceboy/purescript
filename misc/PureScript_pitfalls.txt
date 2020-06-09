@@ -82,3 +82,14 @@ traverse fromString $ split (Pattern "") "11068" == (Just [1,1,0,6,8])
 You should be able to safely unsafeCoerce a Foreign that comes out of simple-json to a Json or the other way around. Json is generally used for things that might result from a JS JSON.parse , whereas Foreign can be any sort of javascript value or object, so it might not be safe to unsafeCoerce a Foreign representing a closure, or undefined or something, to a Json.
 The thing that made simple-json good is now also in argonaut,
 argonaut-codecs ( bundled with the argonaut meta-package) if you just need to serialize or deserialize (separate, explicit encoders and decoders), codec-argonaut if you need to do both (bidirectional).
+
+* 
+class Bifunctor f where
+  bimap :: (a -> b) -> (c -> d) -> f a c -> f b d
+  
+  
+class Profunctor f where
+  bimap :: (a -> b) -> (c -> d) -> f b c -> f a d
+  
+  
+Profunctor is similar to Bifunctor except where Bifunctor allows you to map (covariant functor) on two types, Profunctor has one contravariant and one covariant parameter

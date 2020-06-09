@@ -165,6 +165,23 @@ class Comonad (env e) <= Environment env e a where
   asks :: forall e'. (e -> e') -> env e a -> e'
   local :: forall e'. (e -> e') -> env e a -> env e' a
 
+class (Functor f) <= Alt f where -- Semigroup for Type -> Type
+  alt :: forall a. f a -> f a -> f a
+
+infixl 3 alt as <|> -- Associativity, Distributivity of <$> over <|>
+
+voidRight :: forall f a b. Functor f => a -> f b -> f a
+voidRight x = map (const x)
+
+infixl 4 voidRight as <$
+
+class (Alt f) <= Plus f where -- Monoid for Type -> Type
+  empty :: forall a. f a
+
+class (Applicative f, Plus f) <= Alternative f
+class (Monad m, Alternative m) <= MonadZero m 
+class (MonadZero m) <= MonadPlus m -- Distributivity: (x <|> y) >>= f == (x >>= f) <|> (y >>= f)
+
 class Semiring a where
   add :: a -> a -> a
   zero :: a

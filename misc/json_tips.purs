@@ -30,3 +30,7 @@ newtype Character
             Int.fromString all.height
               # Either.note "no no"
           in Character $ all { height = height } 
+
+
+
+JSON.stringify(obj, null, 2 or 4)
