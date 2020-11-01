@@ -83,6 +83,9 @@ You should be able to safely unsafeCoerce a Foreign that comes out of simple-jso
 The thing that made simple-json good is now also in argonaut,
 argonaut-codecs ( bundled with the argonaut meta-package) if you just need to serialize or deserialize (separate, explicit encoders and decoders), codec-argonaut if you need to do both (bidirectional).
 
+Q: Is there a Json -> Foreign
+A: You can just call unsafeToForeign
+
 * 
 class Bifunctor f where
   bimap :: (a -> b) -> (c -> d) -> f a c -> f b d
@@ -93,3 +96,10 @@ class Profunctor f where
   
   
 Profunctor is similar to Bifunctor except where Bifunctor allows you to map (covariant functor) on two types, Profunctor has one contravariant and one covariant parameter
+
+* class (Semiring a, Semiring b) <= Additive a b
+vs
+instance scalD1 :: ( Scalable k s, Ring s) => RingCat (D1 k)
+vs
+up :: forall a c d k. Cartesian k => Monoidal k => k a c -> k a d -> k a (c /\ d)
+

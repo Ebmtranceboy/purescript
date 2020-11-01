@@ -157,8 +157,19 @@ class Functor env <= Extend env where -- that is : map f = extend (f <<< duplica
   extend :: forall a b. (env a -> b) -> env a -> env b
   -- that is : extend f = map f <<< duplicate
 
-class Comonad env where
+infixr 1 extend as <<=
+
+composeCoKleisli :: forall b a w c. Extend w => (w a -> b) -> (w b -> c) -> w a -> c
+composeCoKleisli f g w = g (f <<= w) -- f =>= extract = f
+                                     -- extract =>= f = f
+                                     -- f =>= (g =>= h) = (f =>= g) =>= h
+
+infixr 1 composeCoKleisli as =>=
+
+class Extend env <= Comonad env where
   extract :: forall a. env a -> a
+  
+
 
 class Comonad (env e) <= Environment env e a where
   ask :: env e a -> e
@@ -181,6 +192,35 @@ class (Alt f) <= Plus f where -- Monoid for Type -> Type
 class (Applicative f, Plus f) <= Alternative f
 class (Monad m, Alternative m) <= MonadZero m 
 class (MonadZero m) <= MonadPlus m -- Distributivity: (x <|> y) >>= f == (x >>= f) <|> (y >>= f)
+
+data Free f a = Pure a | Roll (f (Free f a))
+
+instance freeFunctor :: Functor f => Functor (Free f) where
+  map f (Pure a) = Pure (f a)
+  map f (Roll x) = Roll (map (map f) x)
+
+concatFree :: forall f a. Functor f => Free f (Free f a) -> Free f a
+concatFree (Pure x) = x
+concatFree (Roll y) = Roll (map concatFree y)
+
+bindFree :: forall a b f. Functor f => Free f a -> (a -> Free f b) -> Free f b
+bindFree x f = concatFree (map f x)
+
+instance freeApply :: ( Functor f)  => Apply (Free f) where
+  apply ff fx =  bindFree fx (\x -> bindFree ff (\f -> Pure $ f x)) 
+   
+instance freeApplicative :: Functor f => Applicative (Free f) where
+  pure = Pure
+
+instance freeBind :: Functor f => Bind (Free f) where
+  bind x f = bindFree x f 
+
+liftFree :: forall a f. Functor f => f a -> Free f a
+liftFree x = Roll (map Pure x)
+
+foldFree :: forall f r. Functor f => (f r -> r) -> Free f r -> r
+foldFree _ (Pure a) = a
+foldFree f (Roll x) = f (map (foldFree f) x)
 
 class Semiring a where
   add :: a -> a -> a
