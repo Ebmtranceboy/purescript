@@ -222,6 +222,18 @@ foldFree :: forall f r. Functor f => (f r -> r) -> Free f r -> r
 foldFree _ (Pure a) = a
 foldFree f (Roll x) = f (map (foldFree f) x)
 
+class Bifunctor f where
+  bimap :: (a -> b) -> (c -> d) -> f a c -> f b d
+  
+class Bifunctor w <= Biapply w where
+  biapply :: w (a -> b) (c -> d) -> w a c -> w b d -- <<*>>
+  
+class Biapply w <= Biapplicative w where
+  bipure :: a -> b -> w a b
+  
+instance biapplyTuple :: Biapply Tuple where
+  biapply (Tuple f g) (Tuple a b) = Tuple (f a) (g b)
+
 class Semiring a where
   add :: a -> a -> a
   zero :: a
