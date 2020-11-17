@@ -92,7 +92,7 @@ class Bifunctor f where
   
   
 class Profunctor f where
-  bimap :: (a -> b) -> (c -> d) -> f b c -> f a d
+  dimap :: (a -> b) -> (c -> d) -> f b c -> f a d
   
   
 Profunctor is similar to Bifunctor except where Bifunctor allows you to map (covariant functor) on two types, Profunctor has one contravariant and one covariant parameter
@@ -102,4 +102,37 @@ vs
 instance scalD1 :: ( Scalable k s, Ring s) => RingCat (D1 k)
 vs
 up :: forall a c d k. Cartesian k => Monoidal k => k a c -> k a d -> k a (c /\ d)
+
+* 
+const :: forall a b. a -> b -> a                     -- means
+const :: forall a b. a -> (b -> a)                  -- or
+const :: forall a. (a -> forall b. (b -> a))
+
+Most, if not all, polymorphic functions you’re familiar with— const, head, etc—are rank 1.
+A function with its f parameter of rank 1 is rank 2, and is called rank-n or higher rank.
+
+-- does not compile
+wrong_apply5 :: forall a. (a -> a) -> Int -- which means
+wrong_apply5 :: forall a. ((a ->a) -> Int)
+wrong_apply f = f 5
+-- because f :: a -> a is declared as rank 0 (no polymorphic) so no way to know if Int is a valid a.
+
+-- vs
+apply5 :: (forall a. (a->a)) -> Int
+apply5 f = f 5
+-- where f :: forall a. (a -> a) is rank 1 so apply5 is rank 2
+
+* Q : How to deal with "Type Variable u has escaped its scope” ?
+   A : Use a newtype. For instance
+   
+newtype Cont' r a = Cont' ((a -> r) -> r)
+newtype Cont a = Cont (Cont' (forall r. r) a)
+
+instance functorCont' :: Functor (Cont' r) where
+  map f (Cont' m) = Cont' $ \g -> m  (g <<< f) 
+
+instance functorCont :: Functor Cont where
+  map f (Cont x) = Cont $ map f x
+
+
 
