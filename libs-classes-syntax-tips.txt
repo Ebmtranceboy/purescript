@@ -431,3 +431,5 @@ type TestVar = Variant TestRow
 
 va = inj (SProxy :: SProxy "a") 6     :: TestVar
 vb = inj (SProxy :: SProxy "b") false :: TestVar
+
+

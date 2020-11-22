@@ -125,14 +125,65 @@ apply5 f = f 5
 * Q : How to deal with "Type Variable u has escaped its scope” ?
    A : Use a newtype. For instance
    
-newtype Cont' r a = Cont' ((a -> r) -> r)
-newtype Cont a = Cont (Cont' (forall r. r) a)
+newtype Cont r a = Cont ( (a -> r) -> r )
 
-instance functorCont' :: Functor (Cont' r) where
-  map f (Cont' m) = Cont' $ \g -> m  (g <<< f) 
+instance functorCont :: Functor (Cont r) where
+  map f (Cont m) = Cont $ \g -> m  (g <<< f) 
 
-instance functorCont :: Functor Cont where
-  map f (Cont x) = Cont $ map f x
+instance applyCont :: Apply (Cont r) where
+  apply (Cont f) (Cont a) = 
+    Cont $ \br ->
+      f $ \ab ->
+        a $ br <<< ab
 
+instance applicativeCont :: Applicative (Cont r) where
+  pure a = Cont \ c -> c a
 
+instance bindCont :: Bind (Cont r) where
+  bind (Cont m) f =
+    Cont $ \c ->
+      m $ \a ->
+        let Cont fa = f a
+        in fa c
 
+runCont :: forall a.  Cont a a -> a
+runCont (Cont f) = f identity
+
+withVersionNumber :: forall r. ( Number -> r ) -> r
+withVersionNumber f = f 1.0
+
+withTimestamp :: forall r. ( Int -> r ) -> r
+withTimestamp f = f 1532083362
+
+withOS :: forall r. ( String -> r ) -> r
+withOS f = f "linux"
+
+releaseStringCont :: String
+releaseStringCont = runCont $ do
+  version <- Cont withVersionNumber
+  date <- Cont withTimestamp
+  os <- Cont withOS
+  pure $ os  <> "-" <> show version
+             <> "-" <> show date
+             
+* Mouse FRP Minimal : 
+ module Main where
+
+import Prelude
+import Data.Maybe (Maybe, maybe)
+import Effect (Effect)
+import Effect.Console (log)
+import FRP.Event.Mouse(getMouse)
+import FRP.Behavior (animate)
+import FRP.Behavior.Mouse (position)
+
+safePos :: Maybe { x :: Int, y :: Int} -> { x :: Int, y :: Int}
+safePos = maybe {x:0, y:0} identity
+
+main :: Effect Unit
+main = do
+  mouse <- getMouse
+  _  <- animate (safePos <$> position mouse) (\{x,y}-> log (show x <> " " <> show y))
+  pure unit
+
+  
