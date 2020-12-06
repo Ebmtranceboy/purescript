@@ -1,0 +1,13 @@
+{
+  "private": true,
+  "scripts": {
+    "clean": "rimraf output && rimraf .pulp-cache",
+    "build": "pulp build",
+    "example": "pulp test -r cat > html/index.js && open html/index.html"
+  },
+  "devDependencies": {
+    "pulp": "^12.2.0",
+    "purescript-psa": "^0.6.0",
+    "rimraf": "^2.6.2"
+  }
+}

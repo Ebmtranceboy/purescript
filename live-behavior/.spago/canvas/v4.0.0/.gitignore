@@ -1,0 +1,13 @@
+output/
+node_modules/
+bower_components/
+package-lock.json
+
+/.*
+!/.gitignore
+!/.travis.yml
+
+# OS generated files #
+######################
+ehthumbs.db
+Thumbs.db

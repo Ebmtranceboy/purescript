@@ -9,20 +9,18 @@ import Control.Apply(lift2)
 import Effect (Effect)
 import Data.Int (toNumber)
 import Data.Newtype (unwrap)
-import Data.Time.Duration(Seconds(..)) as Duration
-import Data.Maybe (fromJust, maybe)
+import Data.Maybe (maybe)
 import Data.Set (isEmpty)
 import FRP.Behavior (Behavior, animate, integral', fixB, derivative')
 import FRP.Behavior.Mouse (buttons, position)
-import FRP.Event.Mouse (Mouse, getMouse)
+import FRP.Event.Mouse (getMouse)
 import FRP.Behavior.Time (seconds) as Time
-import Graphics.Canvas ( CanvasElement, getCanvasElementById, getContext2D
+import Graphics.Canvas ( CanvasElement, getContext2D
                        , getCanvasHeight, getCanvasWidth, clearRect)
 import Graphics.Drawing (Drawing, render
                         , fillColor, filled, outlined, lineWidth
                         , circle, rectangle)
 import Color.Scheme.MaterialDesign (blueGrey, yellow)
-import Partial.Unsafe (unsafePartial)
 
 foreign import createCanvas :: Effect CanvasElement
 
@@ -64,9 +62,14 @@ withRadius radius = live $ (lift2 $ \{x, y} r -> dot x y r) <$> mouse <*> radius
 
 -- LIVE SESSION
 
+live1 :: Effect Unit
 live1 = withRadius $ click `by` (if _ then 100.0 else 50.0)
-live2 = withRadius $ (integral' 50.0) <$> pure fromSeconds 
+
+live2 :: Effect Unit
+live2 = withRadius $ (integral' 50.0) <$> pure fromSeconds  
                                       <*> (click `by` (if _ then 50.0 else 0.0))
+                                      
+live3 :: Effect Unit
 live3 = withRadius $ do
    bclick <- click
    pure $ fixB 50.0 \x ->  

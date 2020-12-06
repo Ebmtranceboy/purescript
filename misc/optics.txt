@@ -1,2 +1,14 @@
-The simplest optic is Iso/Adapter. Define a functor Prof -> Set parameterized by an object in CopxC (a pair of objects). It takes a profunctor P and applies it to this pair. Take two such functors parametrized by different pairs. A natural transformation between them is an Iso.
-Take monoidal C. Generalize CopxC by defining morphisms (a, b)->(s, t) as coends over c  (s->(cxa),(cxb)->t) (x is tensor product). Generalize profunctors to go from that category to Set. Define functor that applies such profunctor to a pair. Nat trans between them is lens/prism. You get lens when tensor is product and prism when tensor is coproduct.
+The simplest optic is Iso/Adapter. 
+Define a functor Prof -> Set parameterized by an object in CopxC (a pair of objects). 
+It takes a profunctor P and applies it to this pair. 
+Take two such functors parametrized by different pairs. 
+A natural transformation between them is an Iso.
+
+Take monoidal C. 
+Generalize CopxC by defining morphisms (a, b)->(s, t) as coends over c  (s->(cxa),(cxb)->t) (x is tensor product). 
+Generalize profunctors to go from that category to Set. 
+Define functor that applies such profunctor to a pair. 
+Nat trans between them is lens/prism. 
+
+You get lens when tensor is product and 
+       prism when tensor is coproduct.

@@ -7,7 +7,6 @@ newtype ChartBuilder
   = ChartBuilder (Builder (Record input) (Record output))
 
 
-instance rliConsCons ::
 class RowListIntersection
   (acc :: RowList)
   (xs :: RowList)
@@ -19,6 +18,7 @@ class RowListIntersection
 instance rliNilXS :: RowListIntersection acc Nil trash acc
 instance rliNilYS :: RowListIntersection acc trash Nil acc
  
+instance rliConsCons ::
   ( CompareSymbol xname yname ord
   , Equals ord EQ isEq
   , Equals ord LT isLt
