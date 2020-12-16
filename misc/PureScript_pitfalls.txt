@@ -8,7 +8,9 @@ PURESCRIPT TIPS
 * Don't get confused with lift versions:
 
 import Control.Apply(lift2)
-import Data.Traversable (traverse)
+import Data.Traversable (traverse, sequence)
+
+e.g. sequence [[1,20], [300]] = [[1,300], [2,300]]
 
 (<$>) :: forall a b f. Functor f => (a -> b) -> f a -> f b
 (<*>) :: forall a b f. Apply f => f (a -> b) -> f a -> f b
@@ -33,6 +35,9 @@ e.g. gridxy add [1,20] [300,4000] == [[301,320],[4001,4020]]
      gridyx add [1,20] [300,4000] == [[301,4001],[320,4020]]
      
 e.g. traverse add [1,20] <$> [300,4000] == [[301,320],[4001,4020]]
+
+e.g. traverse (add 1 <$> _) [[1,20],[300,4000]] 
+     == [[2,301],[2,4001],[21,301],[21,4001]]
 
 mapmap :: forall a b f. Functor f => (a -> b) -> f (f a) -> f (f b)
 mapmap = (<$>) <<< (<$>)
