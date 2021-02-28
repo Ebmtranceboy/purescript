@@ -191,4 +191,7 @@ main = do
   _  <- animate (safePos <$> position mouse) (\{x,y}-> log (show x <> " " <> show y))
   pure unit
 
-  
+ * 2 versions of guard
+guard :: forall m. Monoid m => Boolean -> m -> m
+Allow or "truncate" a Monoid to its mempty value based on a condition. Data.Monoid
+guard :: forall m. Alternative m => Boolean -> m Unit. Control.Alternative
