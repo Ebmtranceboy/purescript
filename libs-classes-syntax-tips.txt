@@ -141,6 +141,12 @@ class (Functor t, Foldable t) <= Traversable t where
 -- traverse f = sequence <<< (map f)
 -- traverse_ :: forall a b t f. Applicative f => Foldable t => (a -> f b) -> t a -> f Unit
 
+class (Functor f) <= Distributive f where
+  distribute :: forall a g. Functor g => g (f a) -> f (g a)
+  collect :: forall a b g. Functor g => (a -> f b) -> g a -> f (g b)
+
+cotraverse :: forall a b f g. Distributive f => Functor g => (g a -> b) -> g (f a) -> f b
+
 class Apply m <= Bind m where
   bind :: forall a b. m a -> (a -> m b) -> m b
 

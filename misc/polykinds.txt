@@ -121,3 +121,10 @@ I also think there's some potential improvements we could make to the architectu
 
 As I mentioned, I think we should be doing type class desugaring later in the pipeline.
 I would like to explore adding an application context to the kind checker and expanding synonyms there as we elaborate types. There's a lot of ad-hoc calls to replaceTypeSynoynms and it's very easy to get wrong. Since we need to kind check everything now anyways, I think it would be straightforward enough to do this in a single place.
+
+Is there a difference in how these work? Are there times where one of them fits better than the other?
+data MyType
+foreign import data MyType :: Type
+
+natefaubion  5 minutes ago
+empty data is semantically a type that has no runtime representation (only type information). foreign import data is for things that have a representation (if any) that is opaque to the compiler. 

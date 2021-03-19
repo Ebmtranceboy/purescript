@@ -8,6 +8,7 @@ You can edit this file as you like.
   , "effect"
   , "heterogeneous"
   , "integers"
+  , "ordered-collections"
   , "psci-support"
   , "record"
   , "strings"
