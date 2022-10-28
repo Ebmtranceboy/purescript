@@ -51,24 +51,31 @@ Data.Validation.Semigroup bower install purescript-validation --save
 Web.HTML                  bower install purescript-web-html --save
 Audio.WebAudio.Oscillator bower install purescript-webaudio --save
 
-import Control.Alt(alt)
-import Control.Monad.ST(newSTRef)
-import Control.MonadZero(guard)
-import Data.Array(foldM, catMaybes,sort)
-import Data.Array.Partial(head)
-import Data.Char(toCharCode)
-import Data.Enum(fromEnum)
-import Data.Foldable(sum, product, foldM, maximum)
-import Data.Function.Uncurried(Fn's, mkFn's, runFn's)
-import Data.Int(floor, fromStringAs, toStringAs, binary, octal, hexadecimal, decimal, base36, radix, toNumber)
-import Data.List(fromFoldable, filterM, toUnfoldable)
-import Data.Maybe(fromJust, maybe)
-import Data.String(toCodePointArray, singleton, fromCodePointArray, codePointFromChar,stripPrefix,Pattern)
-import Data.String.CodeUnits(toCharArray, singleton)
+import Control.Alt (alt)
+import Control.Monad.ST (newSTRef)
+import Control.MonadZero (guard)
+import Data.Array (foldM, catMaybes,sort)
+import Data.Array.Partial (head)
+import Data.Char (toCharCode)
+import Data.Enum (fromEnum)
+import Data.Foldable (sum, product, foldM, maximum)
+import Data.Function.Uncurried (Fn's, mkFn's, runFn's)
+import Data.Int (floor, fromStringAs, toStringAs, binary, octal, hexadecimal, decimal, base36, radix, toNumber)
+import Data.List (fromFoldable, filterM, toUnfoldable)
+import Data.Maybe (fromJust, maybe)
+import Data.String (toCodePointArray, singleton, fromCodePointArray, codePointFromChar,stripPrefix,Pattern)
+import Data.String.CodeUnits (toCharArray, singleton)
 import Partial.Unsafe (unsafePartial)
-import Data.Tuple(uncurry)
-import Data.Ord(min,max,abs)
+import Data.Tuple (uncurry)
+import Data.Tuple.Nested ((/\), type (/\))
+import Data.Ord (min,max,abs)
 import Data.Either (note, hush)
+import Data.Newtype (unwrap)
+
+applyFlipped :: forall a b. a -> (a -> b) -> b
+applyFlipped x f = f x
+
+infixl 1 applyFlipped as #
 
 class Eq a where
   eq :: a -> a -> Boolean
@@ -81,8 +88,8 @@ class Eq a <= Ord a where
 class Semigroupoid a where
   compose :: forall b c d. a c d -> a b c -> a b d
 
-class Semigroupoid a <= Category a where
-  id :: forall t. a t t
+class (Semigroupoid a) <= Category a where
+  identity :: forall t. a t t
 
 class Semigroup a where
   append :: a -> a -> a
@@ -125,12 +132,16 @@ for example,
 instance covariantArrow2 :: Covariant (forall n. (x -> n) -> x) where
   fmap :: (x -> y) -> ((x -> n) -> x) -> (x -> n) -> y
 
-class Functor f <= Apply f where
+class (Functor f) <= Apply f where
   apply :: forall a b. f (a -> b) -> f a -> f b 
 
 infixl 4 apply as <*>
 
-class Apply f <= Applicative f where
+applySecond :: forall a b f. Apply f => f a -> f b -> f b
+
+infixl 4 applySecond as *>
+
+class (Apply f) <= Applicative f where
   pure :: forall a. a -> f a
 
 class (Functor t, Foldable t) <= Traversable t where
@@ -147,17 +158,17 @@ class (Functor f) <= Distributive f where
 
 cotraverse :: forall a b f g. Distributive f => Functor g => (g a -> b) -> g (f a) -> f b
 
-class Apply m <= Bind m where
+class (Apply m) <= Bind m where
   bind :: forall a b. m a -> (a -> m b) -> m b
 
 class (Applicative m, Bind m) <= Monad m
 
 data Tuple a b = Tuple a b
 
-class Monad m <= MonadState s m | m -> s where
+class (Monad m) <= MonadState s m | m -> s where
   state :: forall a. (s -> (Tuple a s)) -> m a
 
-class Functor env <= Extend env where -- that is : map f = extend (f <<< duplicate)
+class (Functor env) <= Extend env where -- that is : map f = extend (f <<< duplicate)
   duplicate : forall a. env a -> env (env a) 
   -- that is : duplicate = extend identity
   extend :: forall a b. (env a -> b) -> env a -> env b
@@ -172,12 +183,10 @@ composeCoKleisli f g w = g (f <<= w) -- f =>= extract = f
 
 infixr 1 composeCoKleisli as =>=
 
-class Extend env <= Comonad env where
+class (Extend env) <= Comonad env where
   extract :: forall a. env a -> a
   
-
-
-class Comonad (env e) <= Environment env e a where
+class (Comonad (env e)) <= Environment env e a where
   ask :: env e a -> e
   asks :: forall e'. (e -> e') -> env e a -> e'
   local :: forall e'. (e -> e') -> env e a -> env e' a
@@ -212,7 +221,7 @@ concatFree (Roll y) = Roll (map concatFree y)
 bindFree :: forall a b f. Functor f => Free f a -> (a -> Free f b) -> Free f b
 bindFree x f = concatFree (map f x)
 
-instance freeApply :: ( Functor f)  => Apply (Free f) where
+instance freeApply :: Functor f => Apply (Free f) where
   apply ff fx =  bindFree fx (\x -> bindFree ff (\f -> Pure $ f x)) 
    
 instance freeApplicative :: Functor f => Applicative (Free f) where
@@ -231,14 +240,77 @@ foldFree f (Roll x) = f (map (foldFree f) x)
 class Bifunctor f where
   bimap :: (a -> b) -> (c -> d) -> f a c -> f b d
   
-class Bifunctor w <= Biapply w where
+class (Bifunctor w) <= Biapply w where
   biapply :: w (a -> b) (c -> d) -> w a c -> w b d -- <<*>>
   
-class Biapply w <= Biapplicative w where
+class (Biapply w) <= Biapplicative w where
   bipure :: a -> b -> w a b
   
 instance biapplyTuple :: Biapply Tuple where
   biapply (Tuple f g) (Tuple a b) = Tuple (f a) (g b)
+
+class Profunctor p where
+  dimap :: forall s t a b. (s -> a) -> (b -> t) -> p a b -> p s t
+  
+class (Profunctor p) <= Strong p where
+  first :: forall a b c. p a b -> p (a /\ c) (b /\ c)
+  second :: forall a b c. p b c -> p (a /\ b) (a /\ c)
+
+class (Profunctor p) <= Choice p where
+  left :: forall a b c. p a b -> p (Either a c) (Either b c)
+  right :: forall a b c. p b c -> p (Either a b) (Either a c)
+
+type Optic p s t a b = p a b -> p s t
+type Iso s t a b = forall p. Profunctor p => Optic p s t a b
+type Lens s t a b = forall p. Strong p => Optic p s t a b
+type Prism s t a b = forall p. Choice p => Optic p s t a b
+
+instance Profunctor (->) where
+  dimap a c b = a >>> b >>> c
+  
+instance Strong (->) where
+  first f (a /\ c) = f a /\ c
+  second = map
+  
+instance Choice (->) where
+  left f (Left a) = Left $ f a
+  left _ (Right c) = Right c
+  right = map
+
+type Setter s t a b = Optic Function s t a b
+
+over :: forall s t a b. Setter s t a b -> (a -> b) -> s -> t
+over = identity
+
+newtype Forget r a b = Forget (a -> r)
+
+instance Profunctor (Forget r) where
+  dimap f _ (Forget z) = Forget (z <<< f)
+  
+instance Strong (Forget r) where
+  first (Forget z) = Forget (z <<< fst)
+  second (Forget z) = Forget (z <<< snd)
+  
+instance Monoid r => Choice (Forget r) where
+  left (Forget z) = Forget (either z mempty)
+  right (Forget z) = Forget (either mempty z)
+
+type Fold r s t a b = Optic (Forget r) s t a b
+type Getter s t a b = forall r. Fold r s t a b
+
+view :: forall s t a b. Getter s t a b -> s -> a
+view = unwrap <<< (#) (Forget identity)
+
+iso :: forall s t a b. (s -> a) -> (b -> t) -> Iso s t a b
+iso = dimap
+
+lens :: forall s t a b. (s -> a) -> (s -> b -> t) -> Lens s t a b
+lens get set = lens' \s -> get s /\ set s where
+  lens' to pab = dimap to (\(b /\ f) -> f b) (first pab)
+  
+prism :: forall s t a b. (b -> t) -> (s -> Either t a) -> Prism s t a b
+prism to fro pab = dimap fro (either identity identity) (right (rmap to pab)) where
+  rmap = dimap identity
 
 class Semiring a where
   add :: a -> a -> a
