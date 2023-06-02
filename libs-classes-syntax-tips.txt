@@ -73,6 +73,9 @@ import Data.Ord (min,max,abs)
 import Data.Either (note, hush)
 import Data.Newtype (unwrap)
 
+note :: forall a b. a -> Maybe b -> Either a b
+hush :: forall a b. Either a b -> Maybe b
+
 applyFlipped :: forall a b. a -> (a -> b) -> b
 applyFlipped x f = f x
 
