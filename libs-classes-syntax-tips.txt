@@ -351,6 +351,9 @@ class (EuclideanRing a, DivisionRing a) <= Field a
 type NaturalTransformation f g = forall a. f a -> g a
 infixr 4 type NaturalTransformation as ~>
 
+-- unicode CodePoint
+"\x2713" :: String -- checkmark
+
 > import Data.Int
 > toStringAs hexadecimal 175
 "af"
