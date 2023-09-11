@@ -1,60 +1,68 @@
-Data.Functor              bower install purescript-prelude --save
+Data.Functor              spago install purescript-prelude
 Control.Applicative
 Control.Apply
 Control.Monad
 Data.Eq
 Data.Ordering
 Data.Symbol
+Prim
+Prim.Row
 Prim.RowList
 (...)
 
-Control.Monad.Aff         bower install purescript-aff --save
-Affjax                    bower install purescript-affjax --save
-Data.Argonaut             bower install purescript-argonaut --save
-Data.Array                bower install purescript-arrays --save
-FRP.Behavior              bower install purescript-behaviors --save
-Data.BigInt               bower install purescript-bigints --save
-Graphics.Canvas           bower install purescript-canvas --save
-Control.MonadZero         bower install purescript-control --save
-Control.Alt               bower install purescript-control --save
-Control.Plus              bower install purescript-control --save
-Debug.Trace               bower install purescript-debug --save
-Graphics.Drawing          bower install purescript-drawing --save
-Data.Either               bower install purescript-either --save
-Data.Enum                 bower install purescript-enums --save
-Data.Traversable          bower install purescript-foldable-traversable --save
-Data.Foldable             bower install purescript-foldable-traversable --save
-Data.Foreign              bower install purescript-foreign --save
-Data.Function.Uncurried   bower install purescript-functions --save
-Data.Int                  bower install purescript-integers --save
-Data.List                 bower install purescript-lists --save
-Math                      bower install purescript-math --save
-Data.Maybe                bower install purescript-maybe --save
-Data.Monoid               bower install purescript-monoid --save
-Data.Newtype              bower install purescript-newtype --save
-Data.Map                  bower install purescript-ordered-collections --save
-Partial.Unsafe            bower install purescript-partial --save
-Effect.Random             bower install purescript-random --save
-Data.Ratio                bower install purescript-rationals --save
-Record                    bower install purescript-record --save
-Run                       bower install purescript-run --save
-Data.Set                  bower install purescript-sets --save
-Control.Monad.ST          bower install purescript-st --save
-Data.String               bower install purescript-strings --save
-Data.Char                 bower install purescript-strings --save
-Thermite                  bower install purescript-thermite --save
-Control.Monad.State       bower install purescript-transformers --save
-Data.Tuple                bower install purescript-tuples --save
-Type.Prelude              bower install purescript-typelevel-prelude --save
-Turbine                   bower install purescript-turbine --save
-Data.Validation.Semigroup bower install purescript-validation --save
-Web.HTML                  bower install purescript-web-html --save
-Audio.WebAudio.Oscillator bower install purescript-webaudio --save
+Control.Monad.Aff         spago install purescript-aff
+Affjax                    spago install purescript-affjax
+Data.Argonaut             spago install purescript-argonaut
+Data.Array                spago install purescript-arrays
+FRP.Behavior              spago install purescript-behaviors
+Data.BigInt               spago install purescript-bigints
+Graphics.Canvas           spago install purescript-canvas
+Control.MonadZero         spago install purescript-control
+Control.Alt               spago install purescript-control
+Control.Plus              spago install purescript-control
+Debug.Trace               spago install purescript-debug
+Graphics.Drawing          spago install purescript-drawing
+Data.Either               spago install purescript-either
+Data.Enum                 spago install purescript-enums
+Data.Traversable          spago install purescript-foldable-traversable
+Data.Foldable             spago install purescript-foldable-traversable
+Data.Foreign              spago install purescript-foreign
+Data.Function.Uncurried   spago install purescript-functions
+Data.Int                  spago install purescript-integers
+Data.List                 spago install purescript-lists
+Math                      spago install purescript-math
+Data.Maybe                spago install purescript-maybe
+Data.Monoid               spago install purescript-monoid
+Data.Newtype              spago install purescript-newtype
+Data.Map                  spago install purescript-ordered-collections
+Parsing                   spago install parsing
+Parsing.Combinators       
+Parsing.String
+Parsing.String.Basic
+Partial.Unsafe            spago install purescript-partial
+Effect.Random             spago install purescript-random
+Data.Ratio                spago install purescript-rationals
+Record                    spago install purescript-record
+Run                       spago install purescript-run
+Data.Set                  spago install purescript-sets
+Control.Monad.ST          spago install purescript-st
+Data.String               spago install purescript-strings
+Data.Char                 spago install purescript-strings
+Thermite                  spago install purescript-thermite
+Control.Monad.State       spago install purescript-transformers
+Control.Monad.Writer
+Data.Tuple                spago install purescript-tuples
+Type.Prelude              spago install purescript-typelevel-prelude
+Turbine                   spago install purescript-turbine
+Data.Validation.Semigroup spago install purescript-validation
+Web.HTML                  spago install purescript-web-html
+Audio.WebAudio.Oscillator spago install purescript-webaudio
 
-import Control.Alt (alt)
+import Control.Alt (alt, (<|>))
 import Control.Monad.ST (newSTRef)
+import Control.Monad.Writer (Writer, runWriter, tell)
 import Control.MonadZero (guard)
-import Data.Array (foldM, catMaybes,sort)
+import Data.Array (foldM, catMaybes, sort, elem, index, elemIndex)
 import Data.Array.Partial (head)
 import Data.Char (toCharCode)
 import Data.Enum (fromEnum)
@@ -66,12 +74,19 @@ import Data.Maybe (fromJust, maybe)
 import Data.Number (fromString, pow)
 import Data.String (toCodePointArray, singleton, fromCodePointArray, codePointFromChar,stripPrefix,Pattern)
 import Data.String.CodeUnits (toCharArray, singleton)
+import Parsing (ParseError, Parser, runParser)
+import Parsing.Combinators (try)
+import Parsing.String (char)
+import Parsing.String.Basic (number, skipSpaces)
 import Partial.Unsafe (unsafePartial)
+import Data.Symbol (class IsSymbol, reflectSymbol)
 import Data.Tuple (uncurry)
 import Data.Tuple.Nested ((/\), type (/\))
 import Data.Ord (min,max,abs)
 import Data.Either (note, hush)
 import Data.Newtype (unwrap)
+import Prim (Record)
+import Prim.Row (class Cons, class Lacks)
 
 note :: forall a b. a -> Maybe b -> Either a b
 hush :: forall a b. Either a b -> Maybe b
@@ -517,4 +532,11 @@ type TestVar = Variant TestRow
 va = inj (SProxy :: SProxy "a") 6     :: TestVar
 vb = inj (SProxy :: SProxy "b") false :: TestVar
 
+-- customized do:
+import Prelude hiding (bind, discard)
+
+bind :: forall a r q. ((a -> r) -> q) -> (a -> r) -> q
+bind f a = f a
+
+discard = bind
 
