@@ -223,6 +223,10 @@ infixl 4 voidRight as <$
 class (Alt f) <= Plus f where -- Monoid for Type -> Type
   empty :: forall a. f a
 
+    Left identity: empty <|> x == x
+    Right identity: x <|> empty == x
+    Annihilation: f <$> empty == empty
+
 class (Applicative f, Plus f) <= Alternative f
 class (Monad m, Alternative m) <= MonadZero m 
 class (MonadZero m) <= MonadPlus m -- Distributivity: (x <|> y) >>= f == (x >>= f) <|> (y >>= f)
