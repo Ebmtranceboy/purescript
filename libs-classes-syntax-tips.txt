@@ -1,4 +1,4 @@
-Data.Functor              spago install purescript-prelude
+Data.Functor              spago install prelude
 Control.Applicative
 Control.Apply
 Control.Monad
@@ -10,54 +10,55 @@ Prim.Row
 Prim.RowList
 (...)
 
-Control.Monad.Aff         spago install purescript-aff
-Affjax                    spago install purescript-affjax
-Data.Argonaut             spago install purescript-argonaut
-Data.Array                spago install purescript-arrays
-FRP.Behavior              spago install purescript-behaviors
-Data.BigInt               spago install purescript-bigints
-Graphics.Canvas           spago install purescript-canvas
-Control.MonadZero         spago install purescript-control
-Control.Alt               spago install purescript-control
-Control.Plus              spago install purescript-control
-Debug.Trace               spago install purescript-debug
-Graphics.Drawing          spago install purescript-drawing
-Data.Either               spago install purescript-either
-Data.Enum                 spago install purescript-enums
+Control.Monad.Aff         spago install aff
+Affjax                    spago install affjax
+Data.Argonaut             spago install argonaut
+Data.Array                spago install arrays
+FRP.Behavior              spago install behaviors
+Data.BigInt               spago install bigints
+Graphics.Canvas           spago install canvas
+Control.MonadZero         spago install control
+Control.Alt
+Control.Plus
+Debug.Trace               spago install debug
+Graphics.Drawing          spago install drawing
+Data.Either               spago install either
+Data.Enum                 spago install enums
 Data.Compactable          spago install purscript-filterable
-Data.Traversable          spago install purescript-foldable-traversable
-Data.Foldable             spago install purescript-foldable-traversable
-Data.Foreign              spago install purescript-foreign
-Data.Function.Uncurried   spago install purescript-functions
-Data.Int                  spago install purescript-integers
-Data.List                 spago install purescript-lists
-Math                      spago install purescript-math
-Data.Maybe                spago install purescript-maybe
-Data.Monoid               spago install purescript-monoid
-Data.Newtype              spago install purescript-newtype
-Data.Map                  spago install purescript-ordered-collections
+Data.Traversable          spago install foldable-traversable
+Data.Foldable
+Data.Foreign              spago install foreign
+Data.Function.Uncurried   spago install functions
+Data.Int                  spago install integers
+Data.List                 spago install lists
+Math                      spago install math
+Data.Maybe                spago install maybe
+Data.Monoid               spago install monoid
+Data.Newtype              spago install newtype
+Data.Number               spago install numbers
+Data.Map                  spago install ordered-collections
 Parsing                   spago install parsing
 Parsing.Combinators       
 Parsing.String
 Parsing.String.Basic
-Partial.Unsafe            spago install purescript-partial
-Effect.Random             spago install purescript-random
-Data.Ratio                spago install purescript-rationals
-Record                    spago install purescript-record
-Run                       spago install purescript-run
-Data.Set                  spago install purescript-sets
-Control.Monad.ST          spago install purescript-st
-Data.String               spago install purescript-strings
-Data.Char                 spago install purescript-strings
-Thermite                  spago install purescript-thermite
-Control.Monad.State       spago install purescript-transformers
+Partial.Unsafe            spago install partial
+Effect.Random             spago install random
+Data.Ratio                spago install rationals
+Record                    spago install record
+Run                       spago install run
+Data.Set                  spago install sets
+Control.Monad.ST          spago install st
+Data.String               spago install strings
+Data.Char
+Thermite                  spago install thermite
+Control.Monad.State       spago install transformers
 Control.Monad.Writer
-Data.Tuple                spago install purescript-tuples
-Type.Prelude              spago install purescript-typelevel-prelude
-Turbine                   spago install purescript-turbine
-Data.Validation.Semigroup spago install purescript-validation
-Web.HTML                  spago install purescript-web-html
-Audio.WebAudio.Oscillator spago install purescript-webaudio
+Data.Tuple                spago install tuples
+Type.Prelude              spago install typelevel-prelude
+Turbine                   spago install turbine
+Data.Validation.Semigroup spago install validation
+Web.HTML                  spago install web-html
+Audio.WebAudio.Oscillator spago install webaudio
 
 import Control.Alt (alt, (<|>))
 import Control.Monad.ST (newSTRef)
@@ -67,26 +68,26 @@ import Data.Array (foldM, catMaybes, sort, elem, index, elemIndex)
 import Data.Array.Partial (head)
 import Data.Char (toCharCode)
 import Data.Compactable (compact)
+import Data.Either (note, hush)
 import Data.Enum (fromEnum)
 import Data.Foldable (sum, product, foldM, maximum)
 import Data.Function.Uncurried (Fn's, mkFn's, runFn's)
 import Data.Int (floor, fromStringAs, toStringAs, binary, octal, hexadecimal, decimal, base36, radix, toNumber)
 import Data.List (fromFoldable, filterM, toUnfoldable)
 import Data.Maybe (fromJust, maybe)
+import Data.Newtype (unwrap)
 import Data.Number (fromString, pow)
-import Data.String (toCodePointArray, singleton, fromCodePointArray, codePointFromChar,stripPrefix,Pattern)
+import Data.Ord (min, max, abs)
+import Data.String (toCodePointArray, singleton, fromCodePointArray, codePointFromChar, stripPrefix, Pattern)
 import Data.String.CodeUnits (toCharArray, singleton)
+import Data.Symbol (class IsSymbol, reflectSymbol)
+import Data.Tuple (uncurry)
+import Data.Tuple.Nested ((/\), type (/\))
 import Parsing (ParseError, Parser, runParser)
 import Parsing.Combinators (try)
 import Parsing.String (char)
 import Parsing.String.Basic (number, skipSpaces)
 import Partial.Unsafe (unsafePartial)
-import Data.Symbol (class IsSymbol, reflectSymbol)
-import Data.Tuple (uncurry)
-import Data.Tuple.Nested ((/\), type (/\))
-import Data.Ord (min,max,abs)
-import Data.Either (note, hush)
-import Data.Newtype (unwrap)
 import Prim (Record)
 import Prim.Row (class Cons, class Lacks)
 
@@ -184,14 +185,14 @@ class (Apply m) <= Bind m where
 
 class (Applicative m, Bind m) <= Monad m
 
-data Tuple a b = Tuple a b
-
 class Compactable f where
   compact :: forall a.
     f (Maybe a) -> f a
 
   separate :: forall l r.
     f (Either l r) -> { left :: f l, right :: f r }
+
+data Tuple a b = Tuple a b
 
 class (Monad m) <= MonadState s m | m -> s where
   state :: forall a. (s -> (Tuple a s)) -> m a
@@ -471,7 +472,6 @@ $ spago repl
 > Change "hi"
 (Change "hi")
 
-
 newtype State s a = State { runState :: s -> {fst :: a, snd :: s} }  
 
 instance functorState :: Functor (State s) where
@@ -497,7 +497,6 @@ put a = State {runState: \xs -> {fst: unit, snd: snoc xs a}}
 
 getArray (State {runState}) = (runState []).snd
 
-
 import Data.Array(snoc)
 import Control.Monad.State(State(..), runState)
 import Data.Tuple(fst)
@@ -516,7 +515,6 @@ seqArray = do
   put 4
   get
 
-
 class Interp a where
   interp :: String -> a
 
@@ -530,7 +528,6 @@ else instance interpShow :: (Show b, Interp a) => Interp (b -> a) where
 i = interp
 
 test = i "foo" 42 "bar" true "baz"
-
 
 import Data.Variant (SProxy(..), Variant, inj)
 
