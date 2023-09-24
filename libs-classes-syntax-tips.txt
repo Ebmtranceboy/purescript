@@ -24,6 +24,7 @@ Debug.Trace               spago install purescript-debug
 Graphics.Drawing          spago install purescript-drawing
 Data.Either               spago install purescript-either
 Data.Enum                 spago install purescript-enums
+Data.Compactable          spago install purscript-filterable
 Data.Traversable          spago install purescript-foldable-traversable
 Data.Foldable             spago install purescript-foldable-traversable
 Data.Foreign              spago install purescript-foreign
@@ -65,6 +66,7 @@ import Control.MonadZero (guard)
 import Data.Array (foldM, catMaybes, sort, elem, index, elemIndex)
 import Data.Array.Partial (head)
 import Data.Char (toCharCode)
+import Data.Compactable (compact)
 import Data.Enum (fromEnum)
 import Data.Foldable (sum, product, foldM, maximum)
 import Data.Function.Uncurried (Fn's, mkFn's, runFn's)
@@ -183,6 +185,13 @@ class (Apply m) <= Bind m where
 class (Applicative m, Bind m) <= Monad m
 
 data Tuple a b = Tuple a b
+
+class Compactable f where
+  compact :: forall a.
+    f (Maybe a) -> f a
+
+  separate :: forall l r.
+    f (Either l r) -> { left :: f l, right :: f r }
 
 class (Monad m) <= MonadState s m | m -> s where
   state :: forall a. (s -> (Tuple a s)) -> m a
