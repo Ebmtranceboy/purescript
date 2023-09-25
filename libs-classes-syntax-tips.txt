@@ -12,6 +12,7 @@ Prim.RowList
 
 Control.Monad.Aff         spago install aff
 Affjax                    spago install affjax
+Affjax.Web                spago install affjax-web
 Data.Argonaut             spago install argonaut
 Data.Array                spago install arrays
 FRP.Behavior              spago install behaviors
@@ -24,12 +25,14 @@ Debug.Trace               spago install debug
 Graphics.Drawing          spago install drawing
 Data.Either               spago install either
 Data.Enum                 spago install enums
-Data.Compactable          spago install purscript-filterable
+Fetch                     spago install fetch
+Data.Compactable          spago install filterable
 Data.Traversable          spago install foldable-traversable
 Data.Foldable
 Data.Foreign              spago install foreign
 Data.Function.Uncurried   spago install functions
 Data.Int                  spago install integers
+Effect.Timer              spago install js-timers
 Data.List                 spago install lists
 Math                      spago install math
 Data.Maybe                spago install maybe
@@ -56,10 +59,12 @@ Control.Monad.Writer
 Data.Tuple                spago install tuples
 Type.Prelude              spago install typelevel-prelude
 Turbine                   spago install turbine
+Unsafe.Reference          spago install unsafe-reference
 Data.Validation.Semigroup spago install validation
 Web.HTML                  spago install web-html
 Audio.WebAudio.Oscillator spago install webaudio
 
+import Affjax.Web (request)
 import Control.Alt (alt, (<|>))
 import Control.Monad.ST (newSTRef)
 import Control.Monad.Writer (Writer, runWriter, tell)
@@ -82,6 +87,9 @@ import Data.String (toCodePointArray, singleton, fromCodePointArray, codePointFr
 import Data.String.CodeUnits (toCharArray, singleton)
 import Data.Symbol (class IsSymbol, reflectSymbol)
 import Data.Tuple (uncurry)
+import Effect.Random (random)
+import Effect.Timer (clearInterval, setInteval)
+import Fetch (fetch)
 import Data.Tuple.Nested ((/\), type (/\))
 import Parsing (ParseError, Parser, runParser)
 import Parsing.Combinators (try)
@@ -90,6 +98,7 @@ import Parsing.String.Basic (number, skipSpaces)
 import Partial.Unsafe (unsafePartial)
 import Prim (Record)
 import Prim.Row (class Cons, class Lacks)
+import Unsafe.Reference (unsafeReferenceEq)
 
 note :: forall a b. a -> Maybe b -> Either a b
 hush :: forall a b. Either a b -> Maybe b
