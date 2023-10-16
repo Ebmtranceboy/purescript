@@ -99,7 +99,7 @@ import Parsing.String.Basic (number, skipSpaces)
 import Partial.Unsafe (unsafePartial)
 import Prim (Record)
 import Prim.Row (class Cons, class Lacks)
-import Random.LCG (lcgNext, mkSeed)
+import Random.LCG (lcgNext, mkSeed, unSeed)
 import Unsafe.Reference (unsafeReferenceEq)
 
 note :: forall a b. a -> Maybe b -> Either a b
