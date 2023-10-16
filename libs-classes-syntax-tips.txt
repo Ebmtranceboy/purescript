@@ -33,6 +33,7 @@ Data.Foreign              spago install foreign
 Data.Function.Uncurried   spago install functions
 Data.Int                  spago install integers
 Effect.Timer              spago install js-timers
+Random.LCG                spago install lcg
 Data.List                 spago install lists
 Math                      spago install math
 Data.Maybe                spago install maybe
@@ -98,6 +99,7 @@ import Parsing.String.Basic (number, skipSpaces)
 import Partial.Unsafe (unsafePartial)
 import Prim (Record)
 import Prim.Row (class Cons, class Lacks)
+import Random.LCG (lcgNext, mkSeed)
 import Unsafe.Reference (unsafeReferenceEq)
 
 note :: forall a b. a -> Maybe b -> Either a b
