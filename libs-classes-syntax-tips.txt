@@ -46,6 +46,7 @@ Parsing.Combinators
 Parsing.String
 Parsing.String.Basic
 Partial.Unsafe            spago install partial
+Test.QuickCheck           spago install quickcheck
 Effect.Random             spago install random
 Data.Ratio                spago install rationals
 Record                    spago install record
@@ -560,4 +561,25 @@ bind :: forall a r q. ((a -> r) -> q) -> (a -> r) -> q
 bind f a = f a
 
 discard = bind
+
+
+import Prelude
+
+import Data.List (head)
+import Data.Maybe (Maybe)
+import Effect (Effect)
+import Test.QuickCheck 
+  ( mkSeed
+  , checkResults
+  , quickCheckPure'
+  , (<?>)
+  , ResultSummary
+  )
+rs :: ResultSummary
+rs = checkResults $ quickCheckPure' (mkSeed 13) 100 $ 
+  \n -> (n + 1) * (n + 1) ==  n*n + 1 + 2*n 
+    <?> "Test failed for input " <> show n
+
+counterExample :: Maybe String
+counterExample = head rs.failures <#> _.message
 
