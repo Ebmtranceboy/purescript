@@ -527,6 +527,11 @@ seqArray = do
   put 4
   get
 
+import Data.Symbol (class IsSymbol)
+import Data.Variant (Variant, inj)
+import Prim.Row (class Cons)
+import Type.Proxy (Proxy(..))
+
 printTLS :: forall @a. IsSymbol a => String
 printTLS = reflectSymbol (Proxy :: Proxy a)
 
@@ -559,18 +564,25 @@ i = interp
 
 test = i "foo" 42 "bar" true "baz"
 
-import Data.Variant (SProxy(..), Variant, inj)
+import Data.Variant (Variant, inj)
 
 type TestRow = (a :: Int, b :: Boolean)
 
 type TestRec = Record TestRow
 
-rab = {a: 1, b: true} :: TestRec
+rab = { a: 1, b: true } :: TestRec
 
 type TestVar = Variant TestRow
 
-va = inj (SProxy :: SProxy "a") 6     :: TestVar
-vb = inj (SProxy :: SProxy "b") false :: TestVar
+va = inj (Proxy :: Proxy "a") 6     :: TestVar
+vb = inj (Proxy :: Proxy "b") false :: TestVar
+
+w:: forall a @l t. IsSymbol l => Cons l a t TestRow => a -> Variant TestRow
+w = inj (Proxy :: Proxy l)
+
+wa = w @"a" 6     :: TestVar
+wb = w @"b" false :: TestVar
+
 
 -- customized do:
 import Prelude hiding (bind, discard)
