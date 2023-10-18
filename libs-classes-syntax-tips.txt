@@ -530,6 +530,8 @@ seqArray = do
 printTLS :: forall @a. IsSymbol a => String
 printTLS = reflectSymbol (Proxy :: Proxy a)
 
+name = printTLS @"the perfect name for a typelevel string"
+
 recordInsert
   :: forall r1 r2 @l a
    . IsSymbol l
