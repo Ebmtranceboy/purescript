@@ -47,6 +47,7 @@ Parsing.String
 Parsing.String.Basic
 Partial.Unsafe            spago install partial
 Test.QuickCheck           spago install quickcheck
+Test.QuickCheck.Gen
 Effect.Random             spago install random
 Data.Ratio                spago install rationals
 Record                    spago install record
@@ -609,6 +610,13 @@ import Test.QuickCheck
   , class Arbitrary
   , arbitrary
   )
+import Test.QuickCheck.Gen 
+  ( Gen
+  , vectorOf
+  , oneOf
+  , randomSampleOne
+  , frequency
+  )
 
 counterExample :: ResultSummary -> Maybe String
 counterExample rs =
@@ -629,3 +637,16 @@ rsCplx = checkResults $ quickCheckPure' (mkSeed 123) 100 $
   \(C' z1 /\ C' z2) -> abs( angle (z1 * z2) - (angle z1 + angle z2) ) < 1e-16
     <?> "Test failed for input " <> show (z1 /\ z2)
 
+main :: Effect Unit
+main = do
+  w <- sequence $ randomSampleOne <$> vectorOf 10 <$>
+    (  frequency <$> 
+      ( fromArray 
+        [ 1.0 /\ pure 1.0
+        , 0.5 /\ pure 2.0
+        , 0.333 /\ pure 3.0
+        , 0.25 /\ pure 4.0 
+        ]
+      ) 
+    )
+  render $ h4 $ text $ show w
