@@ -527,6 +527,22 @@ seqArray = do
   put 4
   get
 
+printTLS :: forall @a. IsSymbol a => String
+printTLS = reflectSymbol (Proxy :: Proxy a)
+
+recordInsert
+  :: forall r1 r2 @l a
+   . IsSymbol l
+  => Lacks l r1
+  => Cons l a r1 r2
+  => a
+  -> Record r1
+  -> Record r2
+recordInsert = Record.insert (Proxy :: Proxy l)
+
+recordInsert @"crash" 12 {} 
+
+
 class Interp a where
   interp :: String -> a
 
