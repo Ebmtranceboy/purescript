@@ -1,0 +1,28 @@
+installed from npm, created LeftPad.js and LeftPad.purs
+the JS file is 
+
+import pkg from '@sevalkeles/padding';
+
+const { leftpad } = pkg;
+
+export const _leftpad = (s) => (n) => (c) => leftpad(s, n, c);
+
+ 
+and the purs file:
+
+module LeftPad where
+
+foreign import _leftpad :: String -> Int -> String -> String
+
+
+then, from spago repl:
+
+import Prelude
+
+> import LeftPad
+> :t _leftpad
+String -> Int -> String -> String
+
+> _leftpad "whatever" 15 " "
+"       whatever"
+
