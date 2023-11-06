@@ -1,0 +1,28 @@
+What is a smart getter ?
+
+As an example, let's assume you have a config that has two states: audioCodec and videoCodec.
+
+export const configWithAudioCodec = (audioCodec) => ({ audioCodec });
+export const configWithVideoCodec = (videoCodec) => ({ videoCodec });
+export const configWithVideoAndAudioCodecs = (videoCodec) => (audioCodec) => ({ videoCodec, audioCodec });
+export const emptyConfig = () => ({});
+export const videoCodecImpl = (just) => (nothing) => (config) => config.hasOwnProperty("videoCodec") ? just(config.videoCodec) : nothing;
+export const audioCodecImpl = (just) => (nothing) => (config) => config.hasOwnProperty("audioCodec") ? just(config.audioCodec) : nothing;
+
+
+
+data CodecConfig
+
+foreign import configWithVideoCodec :: String -> CodecConfig
+-- etc
+foreign import audioCodecImpl :: (String -> Maybe String) -> Maybe String -> CodecConfig -> Maybe String
+audioCodec = audioCodecImpl Just Nothing
+
+
+
+Apologies for anything that doesn't typecheck, but in the example above, audioCodec is your smart getter. CodecConfig has no "shape" in PS-land and its allowable contents are completely defined by its constructors.
+
+This is always a bit dangerous because it has the downside of messing up typesafety 
+at the JS layer, but it is quite efficient when it works.
+
+This is one of many ways to do it: there are strategies that give a bit more info to something like CodecConfig by having a rowtype associated with it that holds permissible values. 
