@@ -11,7 +11,6 @@ Prim.Row
 Prim.RowList
 (...)
 
-
 fix :: forall a b. ((a -> b) -> (a -> b)) -> a -> b
 fix f = go
   where
@@ -74,6 +73,7 @@ Control.Monad.Writer
 Data.Tuple                spago install tuples
 Type.Prelude              spago install typelevel-prelude
 Turbine                   spago install turbine
+Unsafe.Coerce             spago install unsafe-coerce
 Unsafe.Reference          spago install unsafe-reference
 Data.Validation.Semigroup spago install validation
 Web.HTML                  spago install web-html
@@ -114,7 +114,11 @@ import Partial.Unsafe (unsafePartial)
 import Prim (Record)
 import Prim.Row (class Cons, class Lacks)
 import Random.LCG (lcgNext, mkSeed, unSeed)
+import Unsafe.Coerce (unsafeCoerce)
 import Unsafe.Reference (unsafeReferenceEq)
+
+undefined :: ∀ a. a
+undefined = unsafeCoerce unit
 
 note :: forall a b. a -> Maybe b -> Either a b
 hush :: forall a b. Either a b -> Maybe b
