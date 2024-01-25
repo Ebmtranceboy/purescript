@@ -36,6 +36,7 @@ Debug.Trace               spago install debug
 Graphics.Drawing          spago install drawing
 Data.Either               spago install either
 Data.Enum                 spago install enums
+Data.Exists               spago install exists
 Fetch                     spago install fetch
 Data.Compactable          spago install filterable
 Data.Traversable          spago install foldable-traversable
@@ -90,8 +91,9 @@ import Data.Char (toCharCode)
 import Data.Compactable (compact)
 import Data.Either (note, hush)
 import Data.Enum (fromEnum)
+import Data.Exists (Exists, mkExists, runExists)
 import Data.Foldable (sum, product, foldM, maximum)
-import Data.Function.Uncurried (Fn's, mkFn's, runFn's)
+import Data.Function.Uncurried (Fn's, mkFn's, runFn's, on)
 import Data.Int (floor, fromStringAs, toStringAs, binary, octal, hexadecimal, decimal, base36, radix, toNumber)
 import Data.List (fromFoldable, filterM, toUnfoldable)
 import Data.Maybe (fromJust, maybe)
@@ -666,3 +668,39 @@ main = do
       ) 
     )
   render $ h4 $ text $ show w
+
+module Main where
+
+import Data.Array (sortBy)
+import Data.Exists (Exists, mkExists, runExists)
+import Data.Foldable (fold)
+import Data.Function (flip, on, ($))
+import Data.Functor (map)
+import Data.Maybe (Maybe(..))
+import Data.Ord (Ordering(..))
+
+data ComparisonF a b = ComparisonF (a -> Maybe b) (b -> b -> Ordering)
+newtype Comparison a = Comparison (Exists (ComparisonF a))
+
+flipComparison :: forall a. Comparison a -> Comparison a
+flipComparison (Comparison exists) = Comparison $ runExists f exists
+  where f :: forall e. ComparisonF a e -> Exists (ComparisonF a)
+        f (ComparisonF a b) = mkExists (ComparisonF a (flip b))
+
+liftCompare :: forall a b. 
+  (a -> b -> Ordering) -> Maybe a -> Maybe b -> Ordering
+liftCompare _ Nothing Nothing   = EQ
+liftCompare _ Nothing (Just _)  = LT
+liftCompare _ (Just _) Nothing  = GT
+liftCompare comp (Just x) (Just y) = comp x y
+
+sortOnMultiple :: forall a b. 
+  Array (Comparison b) -> (a -> b) -> Array a -> Array a
+sortOnMultiple comparisons projection xs =
+  let combineComparison :: Comparison b -> b -> b -> Ordering
+      combineComparison (Comparison exists) = 
+        runExists (\(ComparisonF f g) -> liftCompare g `on` f) exists
+      ordering :: b -> b -> Ordering
+      ordering = fold $ map combineComparison comparisons
+  in  sortBy (ordering `on` projection) xs
+  
