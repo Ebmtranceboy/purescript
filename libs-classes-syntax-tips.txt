@@ -704,3 +704,15 @@ sortOnMultiple comparisons projection xs =
       ordering = fold $ map combineComparison comparisons
   in  sortBy (ordering `on` projection) xs
   
+newtype T a z = T a
+
+instance Eq a => Eq (T a z) where
+  eq (T a) (T b) = a == b
+  
+t1 = T 2 :: forall z. T Int z
+t3 = T 6 :: forall z. T Int z
+
+u1 = T 2 :: T Int Char
+u3 = T 6 :: T Int String
+
+nonTransitivity = t1 == u1 && t1 == u3 -- && u1 == u3
