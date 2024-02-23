@@ -44,6 +44,7 @@ Data.Foldable
 Data.Foreign              spago install foreign
 Control.Comonad.Cofree    spago install free
 Data.Function.Uncurried   spago install functions
+Data.Functor.Compose      spago install functors
 Data.Int                  spago install integers
 Effect.Timer              spago install js-timers
 Random.LCG                spago install lcg
@@ -96,6 +97,7 @@ import Data.Enum (fromEnum)
 import Data.Exists (Exists, mkExists, runExists)
 import Data.Foldable (sum, product, foldM, maximum)
 import Data.Function.Uncurried (Fn's, mkFn's, runFn's, on)
+import Data.Functor.Compose (Compose)
 import Data.Int (floor, fromStringAs, toStringAs, binary, octal, hexadecimal, decimal, base36, radix, toNumber)
 import Data.Lazy (Lazy, force, defer)
 import Data.List (fromFoldable, filterM, toUnfoldable)
