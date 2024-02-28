@@ -48,5 +48,43 @@ has the same effect as extending the last one.
 
 -}
 
+{-
+(Symmetric) Functor pairing
+---------------------------
+
+_  a                          ~       Co _ a
+
+State s                      <==>     Store s
+.......                               .......
+forall a. s -> (a /\ s)               forall a. (s -> a) /\ s
+
+Writer w                     <==>     Traced w
+........                              ........
+forall a. a /\ w                      forall a. w -> a
+
+Reader e                     <==>     Env e
+........                              .....
+forall a. e -> a                      forall a. e /\ a
+
+Product f g a                <==>     Coproduct f g a
+.............                         ...............
+(f a) /\ (g a)                        (f a) \/ (g a)
+
+
+
+When f pairs with g :
+Free f                       <==>     Cofree g
+......                                ........
+forall a. a \/ f (Free f a)           forall a. a /\ g (Cofree g a)
+
+For instance :
+Free (h /\ _)                <==>     Cofree (h -> _)
+
+comonad to monad
+----------------
+
+newtype Co w a = Co (forall r. w (a -> r) -> r)
+-}
+
 main :: Effect Unit
 main = pure unit
