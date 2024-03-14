@@ -54,15 +54,15 @@ has the same effect as extending the last one.
 
 _  a                          ~       Co _ a
 
-State s                      <==>     Store s
+State s                      <==>     Store s = Cofree (Compose (_ /\ s) ((->) s))
 .......                               .......
 forall a. s -> (a /\ s)               forall a. (s -> a) /\ s
 
-Writer w                     <==>     Traced w
+Writer w = Free (_ /\ w)     <==>     Traced w = Cofree ((->) w)
 ........                              ........
 forall a. a /\ w                      forall a. w -> a
 
-Reader e                     <==>     Env e
+Reader e = Free ((->) e)     <==>     Env e = Cofree (Const e)
 ........                              .....
 forall a. e -> a                      forall a. e /\ a
 
@@ -73,11 +73,15 @@ Product f g a                <==>     Coproduct f g a
 
 
 When f pairs with g :
+
 Free f                       <==>     Cofree g
 ......                                ........
 forall a. a \/ f (Free f a)           forall a. a /\ g (Cofree g a)
 
 For instance :
+Free Identity             = Stream =  Cofree Identity
+                      NonEmptyList =  Cofree Maybe
+                              Tree =  Cofree Array 
 Free (h /\ _)                <==>     Cofree (h -> _)
 
 comonad to monad
