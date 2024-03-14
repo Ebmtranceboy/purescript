@@ -49,40 +49,40 @@ has the same effect as extending the last one.
 -}
 
 {-
-(Symmetric) Functor pairing (let data StateCmd s a = Get (s -> a) | Put s a)
+(Symmetric) Functor pairing
 ---------------------------
 
 _  a                          ~       Co _ a
 
-State s = Free (StateCmd s)  <==>     Store s = Cofree (Compose (_ /\ s) ((->) s))
-.......                               .......
-forall a. s -> (a /\ s)               forall a. (s -> a) /\ s
+State s = Free (s -> (_ /\ s))  <==>     Store s = Cofree (Compose (_ /\ s) ((->) s))
+.......                                  .......
+forall a. s -> (a /\ s)                  forall a. (s -> a) /\ s
 
-Writer w = Free (_ /\ w)     <==>     Traced w = Cofree ((->) w)
-........                              ........
-forall a. a /\ w                      forall a. w -> a
+Writer w = Free (_ /\ w)        <==>     Traced w = Cofree ((->) w)
+........                                 ........
+forall a. a /\ w                         forall a. w -> a
 
-Reader e = Free ((->) e)     <==>     Env e = Cofree (Const e)
-........                              .....
-forall a. e -> a                      forall a. e /\ a
+Reader e = Free ((->) e)        <==>     Env e = Cofree (Const e)
+........                                 .....
+forall a. e -> a                         forall a. e /\ a
 
-Product f g a                <==>     Coproduct f g a
-.............                         ...............
-(f a) /\ (g a)                        (f a) \/ (g a)
+Product f g a                   <==>     Coproduct f g a
+.............                            ...............
+(f a) /\ (g a)                           (f a) \/ (g a)
 
 
 
 When f pairs with g :
 
-Free f                       <==>     Cofree g
-......                                ........
-forall a. a \/ f (Free f a)           forall a. a /\ g (Cofree g a)
+Free f                          <==>     Cofree g
+......                                   ........
+forall a. a \/ f (Free f a)              forall a. a /\ g (Cofree g a)
 
 For instance :
-Free Identity             = Stream =  Cofree Identity
-                      NonEmptyList =  Cofree Maybe
-                              Tree =  Cofree Array 
-Free (h /\ _)                <==>     Cofree (h -> _)
+Free Identity              =  Stream  =  Cofree Identity
+                        NonEmptyList  =  Cofree Maybe
+                                Tree  =  Cofree Array 
+Free (h /\ _)                   <==>     Cofree (h -> _)
 
 comonad to monad
 ----------------
