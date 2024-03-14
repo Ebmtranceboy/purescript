@@ -49,12 +49,12 @@ has the same effect as extending the last one.
 -}
 
 {-
-(Symmetric) Functor pairing
+(Symmetric) Functor pairing (let data StateCmd s a = Get (s -> a) | Put s a)
 ---------------------------
 
 _  a                          ~       Co _ a
 
-State s                      <==>     Store s = Cofree (Compose (_ /\ s) ((->) s))
+State s = Free (StateCmd s)  <==>     Store s = Cofree (Compose (_ /\ s) ((->) s))
 .......                               .......
 forall a. s -> (a /\ s)               forall a. (s -> a) /\ s
 
