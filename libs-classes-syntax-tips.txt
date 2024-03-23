@@ -654,6 +654,22 @@ w = inj (Proxy :: Proxy l)
 wa = w @"a" 6     :: TestVar
 wb = w @"b" false :: TestVar
 
+import Data.FastVect.FastVect as FV
+import Type.Proxy (Proxy (..))
+import Prim.Int (class Compare)
+import Prim.Ordering (GT)
+import Data.Reflectable (class Reflectable)
+
+rep :: forall a @n. 
+  Reflectable n Int => Compare n (-1) GT 
+  => a -> FV.Vect n a
+rep str = FV.replicate Proxy str
+
+a13 :: FV.Vect 13 String
+a13 = FV.replicate (Proxy :: _ 13) "a"
+
+b8 :: FV.Vect 8 Int
+b8 = rep 42
 
 -- customized do:
 import Prelude hiding (bind, discard)
