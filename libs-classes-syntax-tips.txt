@@ -784,3 +784,35 @@ u1 = T 2 :: T Int Char
 u3 = T 6 :: T Int String
 
 nonTransitivity = t1 == u1 && t1 == u3 -- && u1 == u3
+
+import Data.Array ((!!)) as Array
+import Effect (Effect)
+import Effect.Console (log)
+import Data.Set (Set, insert, empty, member)
+import Data.Array (length, updateAtIndices, (..), (:))
+import Data.Tuple (fst)
+import Data.Tuple.Nested ((/\))
+import Data.Maybe (fromMaybe)
+import Test.QuickCheck (class Arbitrary, arbitrary, mkSeed)
+import Test.QuickCheck.Gen (evalGen)
+
+nth :: forall a. Arbitrary a => Array a -> Int -> a
+nth arr i = fromMaybe (evalGen  arbitrary { newSeed: mkSeed 0, size: 1 } ) $ arr Array.!! i
+
+infix 5 nth as !!
+
+cycle :: forall a. Arbitrary a => Int -> Array a -> Array a
+cycle n arr = 
+  updateAtIndices (((n-1) /\ (arr !! 0)) : ((\i -> i /\ (arr !! (i+1))) <$> (0..(n-2)))) arr
+  
+permutations :: forall a. Ord a => Arbitrary a => Array a -> Set (Array a)
+permutations arr = fst $ proc n (empty /\ arr)
+  where
+    n = length arr
+    proc 1 x = x
+    proc k (acc /\ cur) =
+      if next `member` acc
+        then proc (k-1) (acc /\ next)
+        else proc n (insert next acc /\ next)
+      where
+        next = cycle k cur
