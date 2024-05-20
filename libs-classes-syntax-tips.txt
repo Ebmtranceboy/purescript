@@ -816,3 +816,18 @@ permutations arr = fst $ proc n (empty /\ arr)
         else proc n (insert next acc /\ next)
       where
         next = cycle k cur
+
+theFinalNumber :: Either String Number
+theFinalNumber = note "There was no number" (Data.Array.last [1000.0, 2000.0, 1250.0])
+
+-- along with using `liftAff` again, we're also using:
+except :: forall e m a. Applicative m => Either e a -> ExceptT e m a
+
+example_v2 :: String -> Aff (Either String Baz)
+example_v2 str = runExceptT do
+  foo <- ExceptT $ func1 str
+  bar <- ExceptT $ func2 foo
+  ms <- except theFinalNumber
+  liftAff $ Aff.delay (Milliseconds ms)
+  ExceptT $ func3 bar
+
