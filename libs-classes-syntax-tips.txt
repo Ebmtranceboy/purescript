@@ -136,7 +136,12 @@ hush :: forall a b. Either a b -> Maybe b
 applyFlipped :: forall a b. a -> (a -> b) -> b
 applyFlipped x f = f x
 
-infixl 1 applyFlipped as #
+infixr 0 Function.apply as $
+infixl 1 Function.applyFlipped as #
+infixl 1 mapFlipped as <#>
+infixl 4 map as <$>
+infixl 4 flap as <@>
+infixl 4 Control.apply as <*>
 
 class Eq a where
   eq :: a -> a -> Boolean
