@@ -95,27 +95,30 @@ import Data.Array (foldM, catMaybes, sort, elem, index, elemIndex)
 import Data.Array.Partial (head)
 import Data.Char (toCharCode)
 import Data.Compactable (compact)
+import Data.Date (Date, canonicalDate, diff)
 import Data.Either (note, hush)
-import Data.Enum (fromEnum)
+import Data.Enum (toEnum, succ, fromEnum)
 import Data.Exists (Exists, mkExists, runExists)
 import Data.Foldable (sum, product, foldM, maximum)
 import Data.Function.Uncurried (Fn's, mkFn's, runFn's, on)
 import Data.Functor.Compose (Compose)
-import Data.Int (floor, fromStringAs, toStringAs, binary, octal, hexadecimal, decimal, base36, radix, toNumber)
+import Data.Int (floor, fromStringAs, toStringAs, binary, octal, hexadecimal, decimal, base36, radix, toNumber, round)
 import Data.Lazy (Lazy, force, defer)
 import Data.List (fromFoldable, filterM, toUnfoldable)
-import Data.Maybe (fromJust, maybe)
+import Data.Maybe (fromJust, maybe, fromMaybe)
 import Data.Newtype (unwrap)
 import Data.Number (fromString, pow)
 import Data.Ord (min, max, abs)
 import Data.String (toCodePointArray, singleton, fromCodePointArray, codePointFromChar, stripPrefix, Pattern)
 import Data.String.CodeUnits (toCharArray, singleton)
 import Data.Symbol (class IsSymbol, reflectSymbol)
+import Data.Time.Duration (Days(..))
 import Data.Tuple (uncurry)
 import Effect.Random (random)
 import Effect.Timer (clearInterval, setInteval)
 import Fetch (fetch)
 import Data.Tuple.Nested ((/\), type (/\))
+import Data.Unfoldable (iterateN)
 import Parsing (ParseError, Parser, runParser)
 import Parsing.Combinators (try)
 import Parsing.String (char)
@@ -838,4 +841,19 @@ example_v2 str = runExceptT do
   ms <- except theFinalNumber
   liftAff $ Aff.delay (Milliseconds ms)
   ExceptT $ func3 bar
+
+date1 = 
+  canonicalDate <$> toEnum 2024 <*> toEnum 10 <*> toEnum 31
+  :: Maybe Date
+date2 = 
+  canonicalDate <$> toEnum 2024 <*> toEnum 11 <*> toEnum 2
+  :: Maybe Date
+
+seq :: Date -> Date -> Array Date
+seq d1 d2 = 
+  iterateN 
+    (round $ 1.0 + nb)
+    (fromMaybe <*> succ) d1
+    where
+        Days nb = diff d2 d1
 
