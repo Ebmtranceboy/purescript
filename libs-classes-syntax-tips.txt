@@ -91,6 +91,7 @@ import Control.Alt (alt, (<|>))
 import Control.Monad.ST (newSTRef)
 import Control.Monad.Writer (Writer, runWriter, tell)
 import Control.MonadZero (guard)
+import Control.Plus (empty)
 import Data.Array (foldM, catMaybes, sort, elem, index, elemIndex)
 import Data.Array.Partial (head)
 import Data.Char (toCharCode)
@@ -130,6 +131,13 @@ import Random.LCG (lcgNext, mkSeed, unSeed)
 import Unsafe.Coerce (unsafeCoerce)
 import Unsafe.Reference (unsafeReferenceEq)
 
+o :: Array Int
+o = do
+  x <- 1..4
+  if x `mod` 2 == 0 
+  then pure x
+  else empty
+  
 undefined :: ∀ a. a
 undefined = unsafeCoerce unit
 
